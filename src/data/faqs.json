@@ -1,0 +1,122 @@
+{
+  "id": "faqs_001",
+  "title": "Frequently Asked Questions",
+  "is_active": true,
+  "categories": [
+    {
+      "heading": "A. About the Platform",
+      "faqs": [
+        {
+          "faq_id": "faq_001",
+          "question": "What is Superfowl Food Club?",
+          "answer": "Superfowl Food Club is a food product discovery and member access platform operated by Finfreed Club Pvt. Ltd. Users can explore products, view pricing information, access membership plans, save preferences, and stay updated about future ordering services."
+        },
+        {
+          "faq_id": "faq_002",
+          "question": "Can I place orders through the app right now?",
+          "answer": "Ordering and delivery services may be introduced gradually through future application updates and selected operational regions. Currently, users can explore products and membership-related features available within the platform."
+        },
+        {
+          "faq_id": "faq_003",
+          "question": "What products are currently displayed on the platform?",
+          "answer": "The platform currently features selected categories including poultry products, soy-based foods, paneer & dairy products, and ready-to-cook food items."
+        }
+      ]
+    },
+    {
+      "heading": "B. Membership",
+      "faqs": [
+        {
+          "faq_id": "faq_004",
+          "question": "Is membership mandatory to use the app?",
+          "answer": "No. Users can browse products, explore categories, and access general platform features without purchasing membership."
+        },
+        {
+          "faq_id": "faq_005",
+          "question": "What are the benefits of becoming a member?",
+          "answer": "Membership plans may provide access to selected member-oriented pricing benefits, product updates, early access opportunities, saved preferences, and future commerce-related conveniences depending on plan type and service availability."
+        },
+        {
+          "faq_id": "faq_006",
+          "question": "Does membership guarantee discounts or savings?",
+          "answer": "No. Membership does not guarantee fixed savings or product availability. Benefits may vary depending on product category, region, operational conditions, and future platform updates."
+        },
+        {
+          "faq_id": "faq_007",
+          "question": "Can membership plans change in future?",
+          "answer": "Yes. Membership plans, features, pricing structures, and available services may be updated or modified from time to time."
+        }
+      ]
+    },
+    {
+      "heading": "C. Products & Pricing",
+      "faqs": [
+        {
+          "faq_id": "faq_008",
+          "question": "Are the prices shown in the app final purchase prices?",
+          "answer": "The prices shown within the platform are indicative or approximate market pricing references and may vary depending on brand, quantity, region, packaging, and future ordering availability."
+        },
+        {
+          "faq_id": "faq_009",
+          "question": "Why do some products show price ranges?",
+          "answer": "Some products are available in different pack sizes, brands, or quality variations. Approximate price ranges help users understand expected market pricing."
+        },
+        {
+          "faq_id": "faq_010",
+          "question": "How is product quality maintained?",
+          "answer": "Products listed within the platform are intended to follow hygienic sourcing, handling, and packaging standards depending on product category and supplier availability."
+        }
+      ]
+    },
+    {
+      "heading": "D. Future Ordering",
+      "faqs": [
+        {
+          "faq_id": "faq_011",
+          "question": "When will ordering services become available?",
+          "answer": "Ordering services may be introduced gradually in selected locations based on operational readiness, logistics, and service availability."
+        },
+        {
+          "faq_id": "faq_012",
+          "question": "Will all locations receive delivery services?",
+          "answer": "Service availability may vary depending on operational regions and future platform expansion plans."
+        }
+      ]
+    },
+    {
+      "heading": "E. Payments & Refunds",
+      "faqs": [
+        {
+          "faq_id": "faq_013",
+          "question": "How can I purchase a membership?",
+          "answer": "Membership plans can be purchased through authorized payment methods available within the application."
+        },
+        {
+          "faq_id": "faq_014",
+          "question": "Are membership payments refundable?",
+          "answer": "Refund eligibility depends on the Refund & Cancellation Policy available within the application. Certain situations such as duplicate transactions or technical errors may qualify for review."
+        },
+        {
+          "faq_id": "faq_015",
+          "question": "What should I do if payment is deducted but membership is not activated?",
+          "answer": "Users may contact the official support channels with transaction details for verification and assistance."
+        }
+      ]
+    },
+    {
+      "heading": "F. Account & Support",
+      "faqs": [
+        {
+          "faq_id": "faq_016",
+          "question": "How can I contact support?",
+          "answer": "Users may contact support through the Help & Support section available within the application."
+        },
+        {
+          "faq_id": "faq_017",
+          "question": "How can I manage my account information?",
+          "answer": "Users can manage profile details, notifications, and membership-related information through the Account section of the application."
+        }
+      ]
+    }
+  ]
+}

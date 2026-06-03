@@ -1,0 +1,183 @@
+{
+  "id": "membership_policy_001",
+  "title": "Membership Policy",
+  "is_active": true,
+  "sections": [
+    {
+      "heading": "Membership Policy",
+      "paragraphs": [
+        "This Membership Policy governs the membership plans and related services offered through Superfowl Food Club, operated by Finfreedompreneurs Club Pvt. Ltd. By purchasing or using any membership plan available on the platform, users agree to the terms outlined below."
+      ]
+    },
+    {
+      "heading": "Membership Overview",
+      "paragraphs": [
+        "Superfowl Food Club offers optional membership plans designed to provide users with access to selected member-oriented purchase benefits, product-related updates, future ordering conveniences, and platform-related services on eligible products and operational regions.",
+        "Membership plans are intended to enhance the user experience within the platform and may evolve as additional services with the nearfuture ecommerce services."
+      ]
+    },
+    {
+      "heading": "Membership Eligibility",
+      "paragraphs": [
+        "Membership is available only to registered users of the platform. Users must provide accurate and complete information during registration and membership activation.",
+        "The company reserves the right to suspend, reject, or terminate memberships associated with false information, misuse, fraudulent activity, or violation of platform policies."
+      ]
+    },
+    {
+      "heading": "Membership Category and validity structure",
+      "paragraphs": [
+        "Membership categories may be classified as:"
+      ],
+      "points": [
+        "refundable membership categories,",
+        "non-refundable membership categories,",
+        "limited validity memberships,",
+        "long-duration memberships,"
+      ],
+      "after_points": [
+        "subject to the applicable plan selected by the member at the time of enrollment.",
+        "Certain membership categories may remain valid for a specified duration from the date of activation, while selected premium or long-duration memberships may continue for extended validity periods as defined under the applicable membership plan."
+      ]
+    },
+    {
+      "heading": "Membership transferability",
+      "paragraphs": [
+        "Some membership categories may permit limited transfer, nominee continuation, or administrative modification requests after completion of a minimum holding period, subject to:"
+      ],
+      "points": [
+        "applicable platform policies,",
+        "operational procedures,",
+        "verification requirements,",
+        "management approval,",
+        "prescribed administrative charges where applicable."
+      ],
+      "after_points": [
+        "Membership transferability, where permitted, shall be treated only as an administrative membership facility and shall not be interpreted as:"
+      ],
+      "sub_points": [
+        "ownership rights,",
+        "investment rights,",
+        "financial securities,",
+        "tradeable assets,",
+        "guaranteed value appreciation,",
+        "or transferable commercial instruments."
+      ]
+    },
+    {
+      "heading": "Refund Eligibility",
+      "paragraphs": [
+        "Refund eligibility, where applicable, shall depend on the specific membership category selected by the member and the applicable Membership Policy and Refund & Cancellation Policy of the platform."
+      ]
+    },
+    {
+      "heading": "Membership Plan Modifications",
+      "paragraphs": [
+        "The platform reserves the right to modify, discontinue, restructure, or update membership plans, validity periods, featuresand related operational conditions from time to time in accordance with business, operational, legal, or regulatory requirements.",
+        "Membership validity does not guarantee uninterrupted access to all future services, product availability, commerce operations, or platform features, which may vary depending on operational regions, service rollout phases, supplier availability, and future application updates."
+      ]
+    },
+    {
+      "heading": "Membership Transfer conditions",
+      "points": [
+        "Transfer request can be applied only after completion of minimum 1 year from the date of membership activation.",
+        "Membership transfer shall be subject to verification of member records and applicable administrative processing requirements.",
+        "Memberships categorized as non-transferable or non-refundable shall not be eligible for transfer requests."
+      ],
+      "after_points": [
+        "Any approved membership transfer request may require administrative review, identity verification, supporting documentation, and applicable processing charges as determined by the platform from time to time."
+      ]
+    },
+    {
+      "heading": "Membership Benefits",
+      "paragraphs": [
+        "Membership benefits may include, depending on plan type and service availability:"
+      ],
+      "points": [
+        "access to member-oriented pricing on eligible products,",
+        "early access to selected services or future ordering features,",
+        "product updates and availability notifications,",
+        "saved preferences and personalized convenience features,",
+        "membership-related support assistance,",
+        "access to selected future platform services where applicable."
+      ],
+      "after_points": [
+        "Benefits may vary by membership plan, operational region, product category, service availability, and future platform updates."
+      ]
+    },
+    {
+      "heading": "No Guaranteed Savings or Availability",
+      "paragraphs": [
+        "Membership does not guarantee:"
+      ],
+      "points": [
+        "fixed or guaranteed savings,",
+        "continuous product availability,",
+        "uninterrupted services,",
+        "guaranteed access to future offerings,",
+        "guaranteed delivery or ordering availability."
+      ],
+      "after_points": [
+        "Any pricing references, availability indicators, or benefit examples shown within the application are informational in nature and may change without prior notice."
+      ]
+    },
+    {
+      "heading": "Membership Payments",
+      "paragraphs": [
+        "Membership fees must be paid through authorized payment methods available within the platform. Applicable taxes, charges, or processing fees may apply depending on the payment method or applicable regulations."
+      ]
+    },
+    {
+      "heading": "Renewals & Changes",
+      "paragraphs": [
+        "Membership plans, pricing structures, included benefits, validity periods, and available services may be updated, modified, or revised by Finfreed Club Pvt. Ltd. from time to time.",
+        "The company reserves the right to discontinue, suspend, or restructure any membership plan without prior notice where required for operational, technical, legal, or business reasons."
+      ]
+    },
+    {
+      "heading": "Misuse & Policy Violations",
+      "paragraphs": [
+        "The company reserves the right to suspend or terminate membership benefits in cases involving:"
+      ],
+      "points": [
+        "fraudulent activities,",
+        "misuse of platform services,",
+        "unauthorized commercial use,",
+        "abusive behavior,",
+        "policy violations,",
+        "suspicious account activity."
+      ]
+    },
+    {
+      "heading": "Future Commerce & Ordering Services",
+      "paragraphs": [
+        "Ordering, delivery, and commerce-related services shall be introduced in future versions of the application and may be limited to selected operational regions and service areas.",
+        "Availability of future services shall depend on operational readiness, logistics, product availability, regulatory requirements, and business decisions."
+      ]
+    },
+    {
+      "heading": "Refunds & Cancellations",
+      "paragraphs": [
+        "Membership refunds, cancellations, and related requests shall be governed by the Refund & Cancellation Policy available within the platform."
+      ]
+    },
+    {
+      "heading": "Limitation of Liability",
+      "paragraphs": [
+        "Finfreed Club Pvt. Ltd. shall not be liable for delays, interruptions, product unavailability, technical issues, operational limitations, third-party disruptions, or service changes beyond reasonable control."
+      ]
+    },
+    {
+      "heading": "Policy Updates",
+      "paragraphs": [
+        "This Membership Policy may be updated, modified, or revised from time to time. Continued use of membership services after such updates constitutes acceptance of the revised policy."
+      ]
+    },
+    {
+      "heading": "Contact & Support",
+      "paragraphs": [
+        "For membership-related support or queries, users may contact the official support channels provided within the application.",
+        "By purchasing or using a Superfowl Food Club membership plan, users acknowledge that they have read, understood, and agreed to this Membership Policy."
+      ]
+    }
+  ]
+}

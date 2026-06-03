@@ -11,6 +11,15 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import FoodClubHeader from '../../../components/common/FoodClubHeader/FoodClubHeader';
+import aboutPolicy from '../../../../about.json';
+import accountDeletionPolicy from '../../../../account_deletation.json';
+import disclaimerPolicy from '../../../../disclaimer.json';
+import faqsPolicy from '../../../../faqs.json';
+import membershipPolicy from '../../../../membership_policy.json';
+import privacyPolicy from '../../../../privacy_policy.json';
+import refundPolicy from '../../../../refund_and_cancellation.json';
+import termsPolicy from '../../../../terms_conditions.json';
 import { RootStackParamList } from '../../../navigation/types';
 
 const RED = '#CC0000';
@@ -42,6 +51,11 @@ const ICONS = {
   bell: '\u{1F514}',
   lock: '\u{1F512}',
   trash: '\u232B',
+  bug: '\u25C7',
+  helpOutline: '?',
+  membershipOutline: '\u25C7',
+  reportOutline: '!',
+  supportOutline: '\u25CE',
 };
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
@@ -49,12 +63,15 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
 type MenuItem = {
   label: string;
   icon?: string;
-  detail: string;
+  outlineIcon?: string;
+  detail?: string;
 };
 
 type MenuSection = {
   title: string;
   icon: string;
+  outlineIcon?: string;
+  detail?: string;
   onPress?: () => void;
   items?: MenuItem[];
 };
@@ -62,7 +79,106 @@ type MenuSection = {
 type DetailContent = {
   title: string;
   body: string;
+  type?: 'text' | 'faqs' | 'report';
 };
+
+type PolicyBlock = {
+  heading?: string;
+  paragraphs?: string[];
+  points?: string[];
+  after_points?: string[];
+  sub_sections?: PolicyBlock[];
+};
+
+type PolicyDocument = {
+  title?: string;
+  paragraphs?: string[];
+  sections?: PolicyBlock[];
+};
+
+type FaqDocument = {
+  title?: string;
+  categories?: Array<{
+    heading: string;
+    faqs: Array<{
+      faq_id: string;
+      question: string;
+      answer: string;
+    }>;
+  }>;
+};
+
+const formatPolicyBlock = (block: PolicyBlock, depth = 0): string[] => {
+  const lines: string[] = [];
+  const prefix = depth > 0 ? '  ' : '';
+
+  if (block.heading) {
+    lines.push(`${prefix}${block.heading}`);
+  }
+
+  block.paragraphs?.forEach(paragraph => {
+    lines.push(`${prefix}${paragraph}`);
+  });
+
+  block.points?.forEach(point => {
+    lines.push(`${prefix}- ${point}`);
+  });
+
+  block.after_points?.forEach(paragraph => {
+    lines.push(`${prefix}${paragraph}`);
+  });
+
+  block.sub_sections?.forEach(subSection => {
+    lines.push(...formatPolicyBlock(subSection, depth + 1));
+  });
+
+  return lines;
+};
+
+const formatPolicyDocument = (document: PolicyDocument) => {
+  const lines: string[] = [];
+
+  document.paragraphs?.forEach(paragraph => lines.push(paragraph));
+  document.sections?.forEach(section => {
+    if (lines.length) {
+      lines.push('');
+    }
+    lines.push(...formatPolicyBlock(section));
+  });
+
+  return {
+    title: document.title || 'Policy',
+    body: lines.join('\n\n'),
+  };
+};
+
+const policyDetails: Record<string, DetailContent> = {
+  'FAQs': formatPolicyDocument(faqsPolicy),
+  'About Us': formatPolicyDocument(aboutPolicy),
+  'Disclaimer': formatPolicyDocument(disclaimerPolicy),
+  'Terms & Conditions': formatPolicyDocument(termsPolicy),
+  'Privacy Policy': formatPolicyDocument(privacyPolicy),
+  'Refund Policy': formatPolicyDocument(refundPolicy),
+  'Membership Policy': formatPolicyDocument(membershipPolicy),
+  'Account Deletion Policy': formatPolicyDocument(accountDeletionPolicy),
+};
+
+const faqDocument = faqsPolicy as FaqDocument;
+
+const reportIssueSections = [
+  {
+    title: 'What can you report?',
+    text: 'Login trouble, wrong product details, missing membership information, payment display issues, or any app bug that affects your experience.',
+  },
+  {
+    title: 'Details to include',
+    text: 'Mention the screen name, what you expected, what happened, and any membership or payment reference if the issue is related to billing.',
+  },
+  {
+    title: 'Privacy note',
+    text: 'Support may use your account details only to investigate and respond to the reported issue.',
+  },
+];
 
 const ProfileScreen = ({ navigation }: Props) => {
   const [expandedSections, setExpandedSections] = useState<
@@ -90,6 +206,7 @@ const ProfileScreen = ({ navigation }: Props) => {
     {
       title: 'Membership',
       icon: ICONS.crown,
+      outlineIcon: ICONS.membershipOutline,
       onPress: () => navigation.navigate('Subscription'),
     },
     {
@@ -105,6 +222,7 @@ const ProfileScreen = ({ navigation }: Props) => {
         {
           label: 'Membership Status',
           icon: ICONS.crown,
+          outlineIcon: ICONS.membershipOutline,
           detail:
             'View your active membership plan, renewal status, savings benefits, and plan validity. Membership benefits shown in the app may vary by service area, stock availability, and current offers.',
         },
@@ -119,16 +237,17 @@ const ProfileScreen = ({ navigation }: Props) => {
     {
       title: 'Support / Help',
       icon: ICONS.support,
+      outlineIcon: ICONS.supportOutline,
       items: [
         {
           label: 'FAQs',
           icon: ICONS.info,
-          detail:
-            'Common help topics include product freshness, membership benefits, pricing changes, delivery availability, and app account access. Product images, offers, and stock details are for app experience and may change.',
+          outlineIcon: ICONS.helpOutline,
         },
         {
           label: 'Report an Issue',
           icon: ICONS.support,
+          outlineIcon: ICONS.reportOutline,
           detail:
             'Use this option to report login trouble, wrong product details, missing membership information, payment display issues, or app bugs. Our team may use your account details only to investigate and respond.',
         },
@@ -137,6 +256,7 @@ const ProfileScreen = ({ navigation }: Props) => {
     {
       title: 'About Us',
       icon: ICONS.info,
+      detail: policyDetails['About Us'].body,
     },
     {
       title: 'Legal & Policies',
@@ -145,38 +265,30 @@ const ProfileScreen = ({ navigation }: Props) => {
         {
           label: 'Terms & Conditions',
           icon: ICONS.legal,
-          detail:
-            'By using Superfowl FoodClub, you agree to use the app responsibly. Product details, prices, discounts, delivery information, and membership benefits may change based on availability, suppliers, launch status, and service area.',
         },
         {
           label: 'Privacy Policy',
           icon: ICONS.shield,
-          detail:
-            'The app may use your name, phone number, login details, wishlist activity, membership choices, and browsing preferences to personalize your experience and manage account communication.',
         },
         {
           label: 'Refund Policy',
           icon: ICONS.card,
-          detail:
-            'Refund eligibility depends on the final payment status, order status, membership terms, and product condition at delivery. Demo payments or informational flows do not create a real refund claim.',
         },
         {
           label: 'Membership Policy',
           icon: ICONS.crown,
-          detail:
-            'Membership plans, savings, renewal reminders, and billing dates shown in the app are part of the membership experience. Final plan terms, charges, taxes, and benefits should be checked before any real purchase.',
+          outlineIcon: ICONS.membershipOutline,
         },
         {
           label: 'Account Deletion Policy',
           icon: ICONS.trash,
-          detail:
-            'Deleting your account may remove profile details, wishlist data, membership preferences, and future order communication history. Some records may be retained where required for legal, billing, or support reasons.',
         },
       ],
     },
     {
       title: 'Disclaimer',
       icon: ICONS.disclaimer,
+      detail: policyDetails.Disclaimer.body,
     },
     {
       title: 'Share APK',
@@ -213,6 +325,7 @@ const ProfileScreen = ({ navigation }: Props) => {
         {
           label: 'Membership Updates',
           icon: ICONS.crown,
+          outlineIcon: ICONS.membershipOutline,
           detail:
             'Receive updates about membership benefits, plan changes, savings information, and new subscription features when they become available in your service area.',
         },
@@ -236,17 +349,11 @@ const ProfileScreen = ({ navigation }: Props) => {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor={PAGE_YELLOW} barStyle="dark-content" />
 
-      <View style={styles.header}>
-        <TouchableOpacity
-          activeOpacity={0.75}
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backIcon}>{ICONS.back}</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <FoodClubHeader
+        title="Profile"
+        showBack
+        onBack={() => navigation.goBack()}
+      />
 
       <ScrollView
         style={styles.container}
@@ -269,48 +376,89 @@ const ProfileScreen = ({ navigation }: Props) => {
         </View>
 
         <View style={styles.menuCard}>
-          {sections.map(section => (
-            <View key={section.title} style={styles.sectionBlock}>
-              <TouchableOpacity
-                activeOpacity={0.78}
-                style={styles.sectionRow}
-                onPress={() =>
-                  section.items
-                    ? toggleSection(section.title)
-                    : section.onPress?.()
-                }
-              >
-                <View style={styles.sectionIconCircle}>
-                  <Text style={styles.sectionIcon}>{section.icon}</Text>
-                </View>
-                <Text style={styles.sectionTitle}>{section.title}</Text>
-                <Text style={styles.sectionArrow}>
-                  {section.items && expandedSections[section.title]
-                    ? ICONS.down
-                    : ICONS.right}
-                </Text>
-              </TouchableOpacity>
+          {sections.map(section => {
+            const SectionOutlineIcon = section.outlineIcon;
+
+            return (
+              <View key={section.title} style={styles.sectionBlock}>
+                <TouchableOpacity
+                  activeOpacity={0.78}
+                  style={styles.sectionRow}
+                  onPress={() =>
+                    section.items
+                      ? toggleSection(section.title)
+                      : section.detail
+                        ? setActiveDetail({
+                            title:
+                              policyDetails[section.title]?.title ||
+                              section.title,
+                            body: section.detail,
+                          })
+                        : section.onPress?.()
+                  }
+                >
+                  <View style={styles.sectionIconCircle}>
+                    <Text style={styles.sectionIcon}>
+                      {SectionOutlineIcon || section.icon}
+                    </Text>
+                  </View>
+                  <Text style={styles.sectionTitle}>{section.title}</Text>
+                  {section.items && expandedSections[section.title] ? (
+                    <Text style={styles.sectionArrow}>{ICONS.down}</Text>
+                  ) : (
+                    <Text style={styles.sectionArrow}>{ICONS.right}</Text>
+                  )}
+                </TouchableOpacity>
 
               {expandedSections[section.title] &&
-                section.items?.map(item => (
-                  <TouchableOpacity
-                    key={item.label}
-                    activeOpacity={0.75}
-                    style={styles.subRow}
-                    onPress={() =>
-                      setActiveDetail({
-                        title: item.label,
-                        body: item.detail,
-                      })
-                    }
-                  >
-                    <Text style={styles.subIcon}>{item.icon}</Text>
-                    <Text style={styles.subText}>{item.label}</Text>
-                    <Text style={styles.subArrow}>{ICONS.right}</Text>
-                  </TouchableOpacity>
-                ))}
-            </View>
-          ))}
+                section.items?.map(item => {
+                  const SubOutlineIcon = item.outlineIcon;
+
+                  return (
+                    <TouchableOpacity
+                      key={item.label}
+                      activeOpacity={0.75}
+                      style={styles.subRow}
+                      onPress={() => {
+                        if (item.label === 'FAQs') {
+                          setActiveDetail({
+                            title: faqsPolicy.title || 'FAQs',
+                            body: '',
+                            type: 'faqs',
+                          });
+                          return;
+                        }
+
+                        if (item.label === 'Report an Issue') {
+                          setActiveDetail({
+                            title: item.label,
+                            body: item.detail || '',
+                            type: 'report',
+                          });
+                          return;
+                        }
+
+                        setActiveDetail(
+                          policyDetails[item.label] || {
+                            title: item.label,
+                            body: item.detail || '',
+                          },
+                        );
+                      }}
+                    >
+                      <View style={styles.subIconBox}>
+                        <Text style={styles.subIcon}>
+                          {SubOutlineIcon || item.icon}
+                        </Text>
+                      </View>
+                      <Text style={styles.subText}>{item.label}</Text>
+                      <Text style={styles.subArrow}>{ICONS.right}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            );
+          })}
         </View>
       </ScrollView>
 
@@ -323,7 +471,52 @@ const ProfileScreen = ({ navigation }: Props) => {
         <View style={styles.modalOverlay}>
           <View style={styles.detailCard}>
             <Text style={styles.detailTitle}>{activeDetail?.title}</Text>
-            <Text style={styles.detailBody}>{activeDetail?.body}</Text>
+            <ScrollView
+              style={styles.detailScroll}
+              showsVerticalScrollIndicator={false}
+            >
+              {activeDetail?.type === 'faqs' ? (
+                <View style={styles.faqList}>
+                  {faqDocument.categories?.map(category => (
+                    <View key={category.heading} style={styles.faqCategory}>
+                      <View style={styles.faqCategoryHeader}>
+                        <Text style={styles.faqCategoryIcon}>
+                          {ICONS.helpOutline}
+                        </Text>
+                        <Text style={styles.faqCategoryTitle}>
+                          {category.heading}
+                        </Text>
+                      </View>
+                      {category.faqs.map(faq => (
+                        <View key={faq.faq_id} style={styles.faqCard}>
+                          <Text style={styles.faqQuestion}>
+                            {faq.question}
+                          </Text>
+                          <Text style={styles.faqAnswer}>{faq.answer}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  ))}
+                </View>
+              ) : activeDetail?.type === 'report' ? (
+                <View style={styles.reportList}>
+                  <View style={styles.reportHero}>
+                    <Text style={styles.reportHeroIcon}>{ICONS.bug}</Text>
+                    <Text style={styles.reportHeroText}>
+                      Share the issue clearly so support can review it faster.
+                    </Text>
+                  </View>
+                  {reportIssueSections.map(section => (
+                    <View key={section.title} style={styles.reportCard}>
+                      <Text style={styles.reportTitle}>{section.title}</Text>
+                      <Text style={styles.reportText}>{section.text}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.detailBody}>{activeDetail?.body}</Text>
+              )}
+            </ScrollView>
             <TouchableOpacity
               activeOpacity={0.8}
               style={styles.detailButton}
@@ -342,33 +535,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: PAGE_YELLOW,
-  },
-  header: {
-    height: 54,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: PAGE_YELLOW,
-    paddingHorizontal: 14,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-  },
-  backIcon: {
-    color: DARK,
-    fontSize: 34,
-    lineHeight: 34,
-  },
-  headerTitle: {
-    flex: 1,
-    color: DARK,
-    fontSize: 20,
-    fontWeight: '900',
-    textAlign: 'center',
-  },
-  headerSpacer: {
-    width: 40,
   },
   container: {
     flex: 1,
@@ -477,6 +643,11 @@ const styles = StyleSheet.create({
     paddingLeft: 56,
     paddingRight: 12,
   },
+  subIconBox: {
+    width: 24,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
   subIcon: {
     width: 24,
     color: RED,
@@ -503,6 +674,7 @@ const styles = StyleSheet.create({
   },
   detailCard: {
     width: '100%',
+    maxHeight: '82%',
     borderRadius: 16,
     borderWidth: 1,
     borderColor: BORDER,
@@ -516,11 +688,112 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     marginBottom: 10,
   },
+  detailScroll: {
+    maxHeight: 430,
+  },
   detailBody: {
     color: '#333333',
     fontSize: 14,
     lineHeight: 21,
     fontWeight: '600',
+  },
+  faqList: {
+    gap: 14,
+    paddingBottom: 2,
+  },
+  faqCategory: {
+    gap: 9,
+  },
+  faqCategoryHeader: {
+    minHeight: 34,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 10,
+    backgroundColor: SOFT_YELLOW,
+    paddingHorizontal: 12,
+  },
+  faqCategoryIcon: {
+    width: 18,
+    color: RED,
+    fontSize: 15,
+    lineHeight: 18,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  faqCategoryTitle: {
+    flex: 1,
+    color: RED,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '900',
+    marginLeft: 8,
+  },
+  faqCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F3E5B7',
+    backgroundColor: '#FFFFFF',
+    padding: 12,
+  },
+  faqQuestion: {
+    color: DARK,
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: '900',
+  },
+  faqAnswer: {
+    color: '#444444',
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: '600',
+    marginTop: 7,
+  },
+  reportList: {
+    gap: 10,
+  },
+  reportHero: {
+    minHeight: 70,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    backgroundColor: SOFT_YELLOW,
+    padding: 14,
+  },
+  reportHeroIcon: {
+    width: 30,
+    color: RED,
+    fontSize: 26,
+    lineHeight: 30,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  reportHeroText: {
+    flex: 1,
+    color: DARK,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '800',
+    marginLeft: 12,
+  },
+  reportCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F3E5B7',
+    backgroundColor: PALE_BACKGROUND,
+    padding: 12,
+  },
+  reportTitle: {
+    color: RED,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '900',
+  },
+  reportText: {
+    color: '#444444',
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: '600',
+    marginTop: 6,
   },
   detailButton: {
     height: 46,

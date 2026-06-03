@@ -1,0 +1,97 @@
+{
+  "id": "terms_conditions_001",
+  "title": "Terms & Conditions",
+  "is_active": true,
+  "sections": [
+    {
+      "heading": "Terms & Conditions",
+      "paragraphs": [
+        "Welcome to Superfowl Food Club, operated by Finfreed Club Pvt. Ltd. By accessing or using the application, you agree to comply with and be bound by the following Terms & Conditions. Please read these terms carefully before using the platform."
+      ]
+    },
+    {
+      "heading": "Platform Overview",
+      "paragraphs": [
+        "Superfowl Food Club is a food product discovery and member access platform that allows users to explore food-related products, view product information, access membership plans, receive updates, save preferences, and use related platform features. Ordering and ecommerce-related services will be introduced soon in future versions across selected operational regions."
+      ]
+    },
+    {
+      "heading": "User Eligibility",
+      "paragraphs": [
+        "Users must provide accurate and complete information during registration and while using the platform. The company reserves the right to suspend or terminate accounts found to contain false, misleading, or unauthorized information."
+      ]
+    },
+    {
+      "heading": "Membership Plans",
+      "paragraphs": [
+        "The platform may offer optional membership plans that provide access to selected member-oriented benefits on eligible products and services. Membership benefits may vary depending on plan type, service availability, operational regions, and future platform updates.",
+        "Membership does not guarantee fixed savings, product availability, uninterrupted service, or guaranteed access to future offerings. Benefits and services may change, improve, or be modified from time to time at the company’s discretion."
+      ]
+    },
+    {
+      "heading": "Product Information",
+      "paragraphs": [
+        "Product descriptions, images, pricing references, availability information, and related details displayed on the platform are provided for informational purposes and may change without prior notice. Actual availability and future ordering services may vary based on operational conditions and service areas."
+      ]
+    },
+    {
+      "heading": "Future Ordering Services",
+      "paragraphs": [
+        "The application may introduce ordering, delivery, and ecommerce-related services in recent future updates. Availability of such services may depend on location, logistics, operational readiness, product availability, and applicable regulations."
+      ]
+    },
+    {
+      "heading": "Acceptable Use",
+      "paragraphs": [
+        "Users agree not to:"
+      ],
+      "points": [
+        "misuse or interfere with platform operations,",
+        "attempt unauthorized access,",
+        "upload harmful or illegal content,",
+        "use the platform for fraudulent activities,",
+        "impersonate other users or entities."
+      ],
+      "after_points": [
+        "The company reserves the right to restrict access or terminate accounts that violate these conditions."
+      ]
+    },
+    {
+      "heading": "Payments",
+      "paragraphs": [
+        "Membership-related payments, where applicable, must be completed through authorized payment methods available within the platform. Users are responsible for verifying payment details before completing transactions."
+      ]
+    },
+    {
+      "heading": "Refunds & Cancellations",
+      "paragraphs": [
+        "Refunds, cancellations, and related requests shall be governed by the Refund & Cancellation Policy available within the application and associated official channels."
+      ]
+    },
+    {
+      "heading": "Privacy & Data Usage",
+      "paragraphs": [
+        "User information and data are handled in accordance with the Privacy Policy of Superfowl Food Club. By using the platform, users consent to the collection and use of information as described in the Privacy Policy."
+      ]
+    },
+    {
+      "heading": "Limitation of Liability",
+      "paragraphs": [
+        "Finfreed Club Pvt. Ltd. shall not be held responsible for temporary service interruptions, technical issues, delays, product unavailability, third-party service disruptions, or operational limitations beyond reasonable control."
+      ]
+    },
+    {
+      "heading": "Modifications to Services or Terms",
+      "paragraphs": [
+        "The company reserves the right to update, modify, suspend, or discontinue parts of the platform, membership plans, features, or these Terms & Conditions at any time without prior notice."
+      ]
+    },
+    {
+      "heading": "Contact & Support",
+      "paragraphs": [
+        "For assistance, support, or policy-related queries, users may contact the official support channels provided within the application.",
+        "By continuing to use Superfowl Food Club, you acknowledge that you have read, understood, and agreed to these Terms & Conditions."
+      ]
+    }
+  ]
+}

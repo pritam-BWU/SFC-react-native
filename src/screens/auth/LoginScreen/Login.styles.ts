@@ -16,12 +16,15 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
   },
-  content: {
+  formScroll: {
     flex: 1,
+  },
+  content: {
+    flexGrow: 1,
     justifyContent: 'flex-start',
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 44 : 18,
-    paddingBottom: compactHeight ? 10 : 18,
+    paddingTop: Platform.OS === 'ios' ? 58 : 40,
+    paddingBottom: compactHeight ? 12 : 20,
   },
   languagePill: {
     alignSelf: 'flex-end',
@@ -68,26 +71,26 @@ const styles = StyleSheet.create({
     paddingBottom: compactHeight ? 6 : 10,
   },
   middleSection: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: compactHeight ? 6 : 10,
-    paddingBottom: compactHeight ? 10 : 18,
+    justifyContent: 'flex-start',
+    paddingTop: compactHeight ? 18 : 30,
+    paddingBottom: compactHeight ? 8 : 16,
   },
   logoFrame: {
-    width: compactHeight ? 126 : 142,
-    height: compactHeight ? 104 : 116,
+    width: compactHeight ? 112 : 132,
+    height: compactHeight ? 112 : 132,
+    borderRadius: compactHeight ? 56 : 66,
+    backgroundColor: 'transparent',
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: compactHeight ? 2 : 4,
+    marginBottom: compactHeight ? 6 : 8,
   },
   logoImage: {
-    position: 'absolute',
-    width: compactHeight ? 250 : 276,
-    height: compactHeight ? 556 : 614,
-    top: compactHeight ? -54 : -60,
-    left: compactHeight ? -62 : -67,
+    width: '100%',
+    height: '100%',
+    borderRadius: compactHeight ? 56 : 66,
   },
   brandTitle: {
     color: '#FFFFFF',
@@ -130,6 +133,7 @@ const styles = StyleSheet.create({
     lineHeight: compactHeight ? 15 : 18,
     fontWeight: '700',
     textAlign: 'center',
+    marginBottom: compactHeight ? 6 : 10,
   },
   loginCard: {
     width: '88%',
@@ -194,12 +198,26 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     paddingHorizontal: 12,
   },
+  inputIcon: {
+    width: 24,
+    color: '#FFD43B',
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
   eyeButton: {
     width: 38,
     height: 38,
     borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  eyeIcon: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    lineHeight: 22,
+    fontWeight: '900',
   },
   forgotText: {
     color: '#FFD43B',
@@ -232,6 +250,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: compactHeight ? 18 : 21,
     lineHeight: compactHeight ? 24 : 28,
+    fontWeight: '900',
+  },
+  buttonIcon: {
+    color: '#FFFFFF',
+    fontSize: 28,
+    lineHeight: 30,
     fontWeight: '900',
   },
   signUpRow: {
@@ -323,6 +347,12 @@ const styles = StyleSheet.create({
   checkboxActive: {
     backgroundColor: '#D50000',
     borderColor: '#D50000',
+  },
+  checkboxIcon: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    lineHeight: 19,
+    fontWeight: '900',
   },
   acceptText: {
     flex: 1,

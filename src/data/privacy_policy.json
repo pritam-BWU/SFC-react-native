@@ -1,0 +1,180 @@
+{
+  "id": "privacy_policy_001",
+  "title": "Privacy Policy",
+  "is_active": true,
+  "sections": [
+    {
+      "heading": "Privacy Policy",
+      "paragraphs": [
+        "Superfowl Food Club, operated by Finfreed Club Pvt. Ltd., values the privacy and security of its users. This Privacy Policy explains how information is collected, used, stored, and protected when users access or use the Superfowl Food Club application and related services.",
+        "By using the platform, users agree to the practices described in this Privacy Policy."
+      ]
+    },
+    {
+      "heading": "Information We Collect",
+      "paragraphs": [
+        "Depending on platform usage and available services, we may collect the following types of information:"
+      ],
+      "sub_sections": [
+        {
+          "heading": "a) Account Information",
+          "points": [
+            "Name",
+            "Mobile number",
+            "Email address",
+            "Profile-related information",
+            "Login credentials and account preferences"
+          ]
+        },
+        {
+          "heading": "b) Device & Technical Information",
+          "paragraphs": [
+            "The application may automatically collect limited technical information such as:"
+          ],
+          "points": [
+            "Device type",
+            "Operating system version",
+            "App version",
+            "IP address",
+            "Basic usage and diagnostic information"
+          ],
+          "after_points": [
+            "For purposes including app functionality, security, performance improvement, and technical support."
+          ]
+        },
+        {
+          "heading": "c) Location Information",
+          "paragraphs": [
+            "Location-related information may be collected where required for service availability, operational regions, future ordering services, or user convenience features."
+          ]
+        },
+        {
+          "heading": "d) Payment Information",
+          "paragraphs": [
+            "Payments may be processed through authorized payment partners or payment gateways. Superfowl Food Club does not store complete card or sensitive banking details directly on its servers unless required by applicable systems or regulations."
+          ]
+        },
+        {
+          "heading": "e) User Activity Information",
+          "points": [
+            "Product browsing activity",
+            "Saved preferences",
+            "Wishlist or favorite items",
+            "Membership-related interactions",
+            "Notification preferences"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "How We Use Information?",
+      "paragraphs": [
+        "Collected information may be used for:"
+      ],
+      "points": [
+        "Account creation and authentication",
+        "Providing platform services and membership features",
+        "Improving user experience",
+        "Enabling customer support",
+        "Sending service-related notifications or updates",
+        "Improving platform security and performance",
+        "Future service enhancements",
+        "Fraud prevention and operational monitoring"
+      ]
+    },
+    {
+      "heading": "Membership & Service Communications",
+      "paragraphs": [
+        "Users may receive communications related to:"
+      ],
+      "points": [
+        "Account activity",
+        "Membership status",
+        "Platform updates",
+        "Product-related notifications",
+        "Support responses",
+        "Future service availability"
+      ],
+      "after_points": [
+        "Users may manage certain notification preferences within the application settings where available."
+      ]
+    },
+    {
+      "heading": "Information Sharing",
+      "paragraphs": [
+        "User information may be shared only where reasonably necessary, including:"
+      ],
+      "points": [
+        "Authorized payment service providers",
+        "Technical service providers",
+        "Analytics or operational support partners",
+        "Legal or regulatory authorities where required by law"
+      ],
+      "after_points": [
+        "The company does not sell personal user information to unauthorized third parties."
+      ]
+    },
+    {
+      "heading": "Data Security",
+      "paragraphs": [
+        "Reasonable technical, administrative, and security measures are implemented to help protect user information against unauthorized access, misuse, alteration, or disclosure.",
+        "However, no digital platform or transmission method can guarantee absolute security."
+      ]
+    },
+    {
+      "heading": "Data Retention",
+      "paragraphs": [
+        "User information may be retained for operational, legal, regulatory, security, and service-related purposes for a reasonable duration as required by applicable business or legal obligations."
+      ]
+    },
+    {
+      "heading": "User Responsibilities",
+      "paragraphs": [
+        "Users are responsible for:"
+      ],
+      "points": [
+        "Maintaining confidentiality of account credentials",
+        "Providing accurate information",
+        "Securing their devices and login access",
+        "Notifying support regarding unauthorized account activity"
+      ]
+    },
+    {
+      "heading": "Third-Party Services",
+      "paragraphs": [
+        "The application may use or integrate third-party services including analytics tools, payment providers, or communication services. Such services may operate under their own policies and terms."
+      ]
+    },
+    {
+      "heading": "Cookies & Analytics",
+      "paragraphs": [
+        "Where applicable, the platform may use cookies, analytics technologies, or similar tools to improve application performance, user experience, and operational insights."
+      ]
+    },
+    {
+      "heading": "Children’s Privacy",
+      "paragraphs": [
+        "The platform is not intended for individuals who are legally restricted from using such services under applicable laws or regulations. Users should access the platform only in accordance with applicable age and legal requirements."
+      ]
+    },
+    {
+      "heading": "Future Services",
+      "paragraphs": [
+        "As Superfowl Food Club will introduce ordering, commerce, delivery, or related services in future versions, certain information practices may evolve accordingly. Updated policies will be made available where necessary."
+      ]
+    },
+    {
+      "heading": "Policy Updates",
+      "paragraphs": [
+        "Finfreed Club Pvt. Ltd. reserves the right to update or modify this Privacy Policy from time to time. Continued use of the platform after updates constitutes acceptance of the revised policy."
+      ]
+    },
+    {
+      "heading": "Contact & Support",
+      "paragraphs": [
+        "For privacy-related concerns, support requests, or policy questions, users may contact the official support channels provided within the application.",
+        "By using Superfowl Food Club, users acknowledge that they have read, understood, and agreed to this Privacy Policy."
+      ]
+    }
+  ]
+}

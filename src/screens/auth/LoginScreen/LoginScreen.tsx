@@ -13,24 +13,32 @@ import {
   ScrollView,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-
+ 
 import { RootStackParamList } from '../../../navigation/types';
 import styles from './Login.styles';
-
+ 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
-
+ 
 const backgroundImage = require('../../../images.png');
-const logoImage = require('../../../images.png');
+const logoImage = require('../../../logo_image_clean.png');
 
+const ICONS = {
+  arrowRight: '\u2192',
+  check: '\u2713',
+  eye: '\u25C9',
+  eyeOff: '\u25CC',
+  lock: '\u25A1',
+  phone: '\u260E',
+};
+ 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [acceptedDisclaimer, setAcceptedDisclaimer] = useState(false);
-
+ 
   const handleContinue = () => {
     if (!loginId.trim() || password.trim().length < 4) {
       Alert.alert(
@@ -39,22 +47,23 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       );
       return;
     }
-
+ 
+    setAcceptedDisclaimer(false);
     setShowDisclaimer(true);
   };
-
+ 
   const handleAcceptDisclaimer = () => {
     if (!acceptedDisclaimer) {
       return;
     }
-
+ 
     setShowDisclaimer(false);
     navigation.replace('Home');
   };
-
+ 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.screen}
     >
       <ImageBackground
@@ -67,34 +76,31 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           locations={[0, 0.55, 1]}
           style={styles.overlay}
         >
-          <View style={styles.content}>
-            <View style={styles.languagePill}>
-              <Icon name="web" size={20} color="#FFD43B" />
-              <Text style={styles.languageText}>English</Text>
-              <Icon name="chevron-down" size={22} color="#FFFFFF" />
-            </View>
-
+          {/* ─── CHANGE 1: English language pill removed ─── */}
+ 
+          <ScrollView
+            style={styles.formScroll}
+            contentContainerStyle={styles.content}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* ─── CHANGE 2: Middle section shifted up (no top spacer) ─── */}
             <View style={styles.middleSection}>
               <View style={styles.logoFrame}>
                 <Image
                   source={logoImage}
                   style={styles.logoImage}
-                  resizeMode="cover"
+                  resizeMode="contain"
                 />
               </View>
-
+ 
               <Text style={styles.brandTitle}>Superfowl</Text>
               <Text style={styles.brandAccent}>FoodClub</Text>
-
-              <View style={styles.taglineRow}>
-                <View style={styles.taglineLine} />
-                <View style={styles.taglineMark} />
-                <View style={styles.taglineLine} />
-              </View>
+ 
               <Text style={styles.tagline}>
                 Premium Quality. Fresh. Hygienic. Always.
               </Text>
-
+ 
               <View style={styles.loginCard}>
                 <Text style={styles.cardTitle}>
                   Welcome <Text style={styles.cardTitleAccent}>Back</Text>
@@ -102,10 +108,11 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.cardSubtitle}>
                   Login to continue your fresh meat experience
                 </Text>
-
+ 
+                {/* ─── CHANGE 3a: Email/Phone field — phone-outline icon ─── */}
                 <Text style={styles.label}>Email or Phone</Text>
                 <View style={styles.inputShell}>
-                  <Icon name="account-outline" size={24} color="#FFD43B" />
+                  <Text style={styles.inputIcon}>{ICONS.phone}</Text>
                   <TextInput
                     value={loginId}
                     onChangeText={setLoginId}
@@ -116,10 +123,11 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                     keyboardType="email-address"
                   />
                 </View>
-
+ 
+                {/* ─── CHANGE 3b: Password field — lock icon + eye toggle (already present) ─── */}
                 <Text style={styles.label}>Password</Text>
                 <View style={styles.inputShell}>
-                  <Icon name="lock-outline" size={23} color="#FFD43B" />
+                  <Text style={styles.inputIcon}>{ICONS.lock}</Text>
                   <TextInput
                     value={password}
                     onChangeText={setPassword}
@@ -128,19 +136,18 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                     style={styles.field}
                     secureTextEntry={!passwordVisible}
                   />
+                  {/* Eye icon — toggles password visibility */}
                   <TouchableOpacity
                     activeOpacity={0.75}
                     onPress={() => setPasswordVisible(current => !current)}
                     style={styles.eyeButton}
                   >
-                    <Icon
-                      name={passwordVisible ? 'eye-outline' : 'eye-off-outline'}
-                      size={22}
-                      color="#FFFFFF"
-                    />
+                    <Text style={styles.eyeIcon}>
+                      {passwordVisible ? ICONS.eye : ICONS.eyeOff}
+                    </Text>
                   </TouchableOpacity>
                 </View>
-
+ 
                 <TouchableOpacity
                   activeOpacity={0.75}
                   onPress={() =>
@@ -152,7 +159,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 >
                   <Text style={styles.forgotText}>Forgot Password?</Text>
                 </TouchableOpacity>
-
+ 
                 <TouchableOpacity
                   activeOpacity={0.88}
                   style={styles.button}
@@ -165,10 +172,10 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                     style={styles.buttonGradient}
                   >
                     <Text style={styles.buttonText}>Login</Text>
-                    <Icon name="arrow-right" size={28} color="#FFFFFF" />
+                    <Text style={styles.buttonIcon}>{ICONS.arrowRight}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
-
+ 
                 <View style={styles.signUpRow}>
                   <View style={styles.signUpLine} />
                   <Text style={styles.signUpCopy}>Don't have an account?</Text>
@@ -182,10 +189,10 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
+          </ScrollView>
         </LinearGradient>
       </ImageBackground>
-
+ 
       <Modal
         visible={showDisclaimer}
         transparent
@@ -200,7 +207,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.disclaimerIntro}>
               Please read and accept before entering Chicken App.
             </Text>
-
+ 
             <ScrollView
               style={styles.disclaimerScroll}
               showsVerticalScrollIndicator={false}
@@ -234,7 +241,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 by location and availability.
               </Text>
             </ScrollView>
-
+ 
             <TouchableOpacity
               activeOpacity={0.8}
               style={styles.acceptRow}
@@ -247,14 +254,14 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 ]}
               >
                 {acceptedDisclaimer && (
-                  <Icon name="check" size={17} color="#FFFFFF" />
+                  <Text style={styles.checkboxIcon}>{ICONS.check}</Text>
                 )}
               </View>
               <Text style={styles.acceptText}>
                 I have read and accept the Privacy Policy & Disclaimer.
               </Text>
             </TouchableOpacity>
-
+ 
             <View style={styles.modalActions}>
               <TouchableOpacity
                 activeOpacity={0.8}
@@ -281,5 +288,6 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     </KeyboardAvoidingView>
   );
 };
-
+ 
 export default LoginScreen;
+ 

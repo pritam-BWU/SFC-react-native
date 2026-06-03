@@ -1,0 +1,119 @@
+{
+  "id": "membership_benefits_001",
+  "title": "Membership Benefits",
+  "is_active": true,
+  "categories": [
+    {
+      "id": "flexible_membership_access",
+      "title": "FLEXIBLE MEMBERSHIP ACCESS",
+      "plans": [
+        {
+          "name": "Bronze",
+          "benefits": [
+            "Access to selected member-oriented pricing benefits",
+            "Product & availability updates",
+            "Save favorites & preferences",
+            "Future ordering notifications",
+            "Standard member assistance access"
+          ]
+        },
+        {
+          "name": "Silver",
+          "benefits": [
+            "Extended member-oriented pricing eligibility",
+            "Priority platform update access",
+            "Enhanced product browsing experience",
+            "Early feature update notifications",
+            "Priority member assistance support"
+          ]
+        },
+        {
+          "name": "Gold",
+          "benefits": [
+            "Enhanced member pricing eligibility on selected products",
+            "Priority product launch updates",
+            "Expanded account convenience features",
+            "Access to selected seasonal member campaigns",
+            "Enhanced communication assistance"
+          ]
+        },
+        {
+          "name": "Platinum",
+          "benefits": [
+            "Premium member-oriented pricing eligibility",
+            "Priority future service update access",
+            "Enhanced account convenience tools",
+            "Priority feature access opportunities",
+            "Extended member support access"
+          ]
+        },
+        {
+          "name": "Diamond",
+          "benefits": [
+            "Highest flexible membership pricing eligibility tier",
+            "Priority onboarding for future commerce services",
+            "Dedicated member assistance support",
+            "Premium account convenience features",
+            "Priority access to selected member engagement activities"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "long_duration_membership_access",
+      "title": "LONG-DURATION MEMBERSHIP ACCESS",
+      "plans": [
+        {
+          "name": "Bronze",
+          "benefits": [
+            "Enhanced long-duration member pricing eligibility",
+            "Priority product & service notifications",
+            "Persistent saved preferences access",
+            "Extended feature access eligibility",
+            "Long-duration member support assistance"
+          ]
+        },
+        {
+          "name": "Silver",
+          "benefits": [
+            "Expanded member-oriented pricing eligibility",
+            "Priority future ordering access notifications",
+            "Enhanced member browsing conveniences",
+            "Early access to selected future features",
+            "Priority support assistance access"
+          ]
+        },
+        {
+          "name": "Gold",
+          "benefits": [
+            "Premium member pricing eligibility on selected products",
+            "Priority product launch visibility",
+            "Enhanced long-duration member conveniences",
+            "Selected premium seasonal campaign access",
+            "Priority communication support assistance"
+          ]
+        },
+        {
+          "name": "Platinum",
+          "benefits": [
+            "Advanced member-oriented pricing eligibility",
+            "Priority onboarding for upcoming platform services",
+            "Premium account convenience features",
+            "Expanded feature access opportunities",
+            "Premium member support queue access"
+          ]
+        },
+        {
+          "name": "Diamond",
+          "benefits": [
+            "Highest long-duration pricing eligibility tier",
+            "Premium future commerce onboarding priority",
+            "Dedicated priority member assistance",
+            "Advanced premium account conveniences",
+            "Exclusive premium member engagement access"
+          ]
+        }
+      ]
+    }
+  ]
+}

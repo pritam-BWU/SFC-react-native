@@ -1,0 +1,55 @@
+{
+  "id": "disclaimer_001",
+  "title": "Disclaimer",
+  "is_active": true,
+  "sections": [
+    {
+      "heading": "Disclaimer",
+      "paragraphs": [
+        "Superfowl Food Club, operated by Finfreed Club Pvt. Ltd., is a food product discovery and member access platform intended to provide users with information relating to food products, membership-related benefits, product updates, and future commerce-related services."
+      ]
+    },
+    {
+      "heading": "Product Information Disclaimer",
+      "paragraphs": [
+        "The product images, descriptions, pricing references, availability indicators, and related information displayed within the platform are provided for general informational and reference purposes only. Actual product availability, pricing, packaging, quality variations, and future service availability may vary depending on operational region, supplier availability, market conditions, logistics, and future platform updates."
+      ]
+    },
+    {
+      "heading": "Pricing Disclaimer",
+      "paragraphs": [
+        "Approximate or indicative pricing shown within the application should not be interpreted as guaranteed final selling prices, fixed offers, or binding purchase commitments unless explicitly stated during an active ordering process where applicable."
+      ]
+    },
+    {
+      "heading": "Membership Disclaimer",
+      "paragraphs": [
+        "Membership plans available on the platform are intended to provide access to selected member-oriented benefits and conveniences. Membership does not guarantee fixed savings, product availability, uninterrupted services, guaranteed future ordering access, or assured commercial benefits."
+      ]
+    },
+    {
+      "heading": "Future Services Disclaimer",
+      "paragraphs": [
+        "Certain ordering, delivery, and ecommerce-related services referenced within the platform may be introduced gradually in selected locations through future application updates and operational expansion."
+      ]
+    },
+    {
+      "heading": "Accuracy & Availability",
+      "paragraphs": [
+        "While reasonable efforts are made to maintain accurate and updated information, Finfreed Club Pvt. Ltd. does not guarantee the completeness, accuracy, or uninterrupted availability of all platform content, services, product references, or technical operations at all times."
+      ]
+    },
+    {
+      "heading": "User Responsibility",
+      "paragraphs": [
+        "Users are advised to independently review all product information, membership details, applicable policies, and platform terms before making decisions relating to memberships or future service usage."
+      ]
+    },
+    {
+      "heading": "Acceptance",
+      "paragraphs": [
+        "By using Superfowl Food Club, users acknowledge and agree to this Disclaimer along with the applicable Terms & Conditions, Privacy Policy, Membership Policy, Refund & Cancellation Policy, and other platform guidelines."
+      ]
+    }
+  ]
+}

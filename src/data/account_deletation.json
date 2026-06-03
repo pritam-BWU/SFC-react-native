@@ -1,0 +1,94 @@
+{
+  "id": "account_deletion_policy_001",
+  "title": "Account Deletion Policy",
+  "is_active": true,
+  "sections": [
+    {
+      "heading": "Account Deletion Policy",
+      "paragraphs": [
+        "This Account Deletion Policy applies to users of Superfowl Food Club, operated by Finfreed Club Pvt. Ltd. The policy explains how users may request deletion of their account and related information from the platform."
+      ]
+    },
+    {
+      "heading": "User Rights",
+      "paragraphs": [
+        "Users may request deletion of their Superfowl Food Club account at any time through the account settings section of the application or through the official support channels provided by the platform."
+      ]
+    },
+    {
+      "heading": "Information Subject to Deletion",
+      "paragraphs": [
+        "Upon successful verification and processing of an account deletion request, the platform may delete or anonymize certain user-related information including:"
+      ],
+      "points": [
+        "profile information,",
+        "saved preferences,",
+        "wishlist or saved items,",
+        "membership-related account records where applicable,",
+        "non-essential account usage data."
+      ]
+    },
+    {
+      "heading": "Information That May Be Retained",
+      "paragraphs": [
+        "Certain information may be retained for a limited period where necessary for:"
+      ],
+      "points": [
+        "legal or regulatory compliance,",
+        "fraud prevention,",
+        "payment dispute handling,",
+        "financial record maintenance,",
+        "security monitoring,",
+        "enforcement of platform policies,",
+        "technical backup and system integrity purposes."
+      ],
+      "after_points": [
+        "Such retained information shall be handled in accordance with applicable laws and the Privacy Policy of the platform."
+      ]
+    },
+    {
+      "heading": "Membership & Payments",
+      "paragraphs": [
+        "Deletion of a user account does not automatically guarantee cancellation or refund of membership-related payments unless specifically eligible under the applicable Membership Policy or Refund & Cancellation Policy.",
+        "Users are advised to review all active memberships and applicable policies before initiating account deletion."
+      ]
+    },
+    {
+      "heading": "Pending Requests & Support Matters",
+      "paragraphs": [
+        "Account deletion requests may be delayed or temporarily restricted where:"
+      ],
+      "points": [
+        "payment disputes are pending,",
+        "fraudulent or suspicious activity is under review,",
+        "unresolved support matters exist,",
+        "legal obligations require temporary data retention."
+      ]
+    },
+    {
+      "heading": "Processing Timeline",
+      "paragraphs": [
+        "Account deletion requests are generally processed within a reasonable operational timeframe after successful verification of the account owner’s identity."
+      ]
+    },
+    {
+      "heading": "Re-Registration",
+      "paragraphs": [
+        "Users may create a new account in the future subject to platform policies, operational availability, and applicable membership conditions."
+      ]
+    },
+    {
+      "heading": "Policy Updates",
+      "paragraphs": [
+        "Finfreed Club Pvt. Ltd. reserves the right to update or modify this Account Deletion Policy from time to time in accordance with operational, legal, or regulatory requirements."
+      ]
+    },
+    {
+      "heading": "Contact & Support",
+      "paragraphs": [
+        "For assistance regarding account deletion requests or related concerns, users may contact the official support channels provided within the application.",
+        "By using Superfowl Food Club, users acknowledge and agree to this Account Deletion Policy."
+      ]
+    }
+  ]
+}

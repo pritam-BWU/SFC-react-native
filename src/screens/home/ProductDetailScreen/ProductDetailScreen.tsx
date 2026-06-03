@@ -11,12 +11,12 @@ import {
   View,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import FoodClubHeader from '../../../components/common/FoodClubHeader/FoodClubHeader';
 import { getDatasetProductById } from '../../../data/productDataset';
 import { RootStackParamList } from '../../../navigation/types';
-
-const { width } = Dimensions.get('window');
 
 const RED = '#CC0000';
 const DARK = '#101010';
@@ -26,26 +26,6 @@ const SOFT_YELLOW = '#FFF7D6';
 const BORDER = '#F1DFA0';
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const HERO_HEIGHT = Math.max(150, Math.min(210, SCREEN_HEIGHT * 0.24));
-
-const ICONS = {
-  back: '\u2039',
-  heart: '\u2764\uFE0F',
-  heartEmpty: '\u2661',
-  share: '\u22EF',
-  shield: '\u{1F6E1}\uFE0F',
-  star: '\u2605',
-  chill: '\u2744\uFE0F',
-  truck: '\u{1F69A}',
-  bell: '\u{1F514}',
-  leaf: '\u{1F331}',
-  flask: '\u2697',
-  crown: '\u{1F451}',
-  home: '\u2302',
-  grid: '\u25A6',
-  account: '\u{1F464}',
-  bag: '\u{1F6CD}\uFE0F',
-  right: '\u203A',
-};
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ProductDetail'>;
 
@@ -59,11 +39,15 @@ type Detail = {
   pack: string;
   about: string;
   nutrition?: string;
+  nutritionItems: string[];
   jsonSource?: string;
   howToUse?: string;
   sourceTitle: string;
   sourceText: string;
-  benefits: string[];
+  highlights: {
+    icon: string;
+    title: string;
+  }[];
 };
 
 const images = {
@@ -101,7 +85,12 @@ const DETAILS: Record<string, Detail> = {
     sourceTitle: 'Sourced from trusted farms',
     sourceText:
       'Our chicken is sourced from certified farms that follow strong hygiene and freshness standards.',
-    benefits: ['High Protein', 'No Added Hormones', 'Hygienically Processed'],
+    nutritionItems: ['High Protein', 'No Added Hormones', 'Hygienically Processed'],
+    highlights: [
+      { icon: 'Dumbbell', title: 'High Protein' },
+      { icon: 'ShieldCheck', title: 'Hygienically Processed' },
+      { icon: 'Snowflake', title: 'Freshly Packed' },
+    ],
   },
   'soya-chunks': {
     title: 'Soya Chunks',
@@ -116,7 +105,12 @@ const DETAILS: Record<string, Detail> = {
     sourceTitle: 'Made from quality soy',
     sourceText:
       'Selected soy is processed in clean facilities to keep texture, nutrition, and taste consistent.',
-    benefits: ['High Protein', 'Vegetarian', 'Easy To Cook'],
+    nutritionItems: ['High Protein', 'Vegetarian', 'Easy To Cook'],
+    highlights: [
+      { icon: 'Dumbbell', title: 'High Protein' },
+      { icon: 'Leaf', title: 'Vegetarian' },
+      { icon: 'CookingPot', title: 'Easy To Cook' },
+    ],
   },
   paneer: {
     title: 'Fresh Paneer',
@@ -131,7 +125,12 @@ const DETAILS: Record<string, Detail> = {
     sourceTitle: 'Prepared from fresh milk',
     sourceText:
       'Fresh milk is handled with hygienic care to create paneer with clean taste and soft texture.',
-    benefits: ['Rich In Protein', 'Fresh Milk', 'Soft Texture'],
+    nutritionItems: ['Rich In Protein', 'Fresh Milk', 'Soft Texture'],
+    highlights: [
+      { icon: 'Dumbbell', title: 'Rich In Protein' },
+      { icon: 'Milk', title: 'Fresh Milk' },
+      { icon: 'BadgeCheck', title: 'Soft Texture' },
+    ],
   },
   'processed-chicken': {
     title: 'Chicken Nuggets',
@@ -146,7 +145,12 @@ const DETAILS: Record<string, Detail> = {
     sourceTitle: 'Processed with care',
     sourceText:
       'Prepared under controlled hygiene standards and packed for reliable taste and convenience.',
-    benefits: ['Quick Snack', 'Quality Checked', 'Ready To Cook'],
+    nutritionItems: ['Quick Snack', 'Quality Checked', 'Ready To Cook'],
+    highlights: [
+      { icon: 'Zap', title: 'Quick Snack' },
+      { icon: 'ShieldCheck', title: 'Quality Checked' },
+      { icon: 'Flame', title: 'Ready To Cook' },
+    ],
   },
   fish: {
     title: 'Fresh Fish',
@@ -161,11 +165,68 @@ const DETAILS: Record<string, Detail> = {
     sourceTitle: 'Sourced from trusted fisheries',
     sourceText:
       'Our fish is selected for freshness and cleaned carefully before hygienic packing.',
-    benefits: ['Fresh Catch', 'Cleaned Well', 'Rich Taste'],
+    nutritionItems: ['Fresh Catch', 'Cleaned Well', 'Rich Taste'],
+    highlights: [
+      { icon: 'Snowflake', title: 'Fresh Catch' },
+      { icon: 'ShieldCheck', title: 'Cleaned Well' },
+      { icon: 'Utensils', title: 'Rich Taste' },
+    ],
   },
 };
 
 const tabs = ['About the Product', 'Nutrition'];
+
+const tabIcons: Record<string, string> = {
+  'About the Product': 'information-outline',
+  Nutrition: 'food-apple-outline',
+};
+
+const productHighlightIcons: Record<string, string> = {
+  Activity: 'run',
+  BadgeCheck: 'check-decagram-outline',
+  Beef: 'food-steak',
+  Bird: 'bird',
+  Briefcase: 'briefcase-outline',
+  ChefHat: 'chef-hat',
+  CircleDot: 'circle-slice-8',
+  Clock: 'clock-outline',
+  CookingPot: 'pot-steam-outline',
+  Drumstick: 'food-drumstick-outline',
+  Dumbbell: 'dumbbell',
+  Flame: 'fire',
+  GlassWater: 'glass-mug-variant',
+  Knife: 'silverware',
+  Leaf: 'leaf',
+  Milk: 'cup-water',
+  Nut: 'peanut-outline',
+  PartyPopper: 'party-popper',
+  Pepper: 'chili-mild-outline',
+  Salad: 'food-apple-outline',
+  Sandwich: 'hamburger',
+  ShieldCheck: 'shield-check-outline',
+  Snowflake: 'snowflake',
+  Sparkles: 'sparkles',
+  Utensils: 'silverware-fork-knife',
+  UtensilsCrossed: 'silverware-variant',
+  Users: 'account-group-outline',
+  Zap: 'lightning-bolt-outline',
+};
+
+const normalizeIconName = (name: string) => name.replace(/[\s_-]/g, '');
+
+const HighlightIcon = ({ name }: { name: string }) => {
+  return (
+    <Icon
+      name={
+        productHighlightIcons[name] ||
+        productHighlightIcons[normalizeIconName(name)] ||
+        productHighlightIcons.ShieldCheck
+      }
+      color={RED}
+      size={21}
+    />
+  );
+};
 
 const ProductDetailScreen = ({ navigation, route }: Props) => {
   const datasetProduct = getDatasetProductById(route.params.productId);
@@ -180,22 +241,22 @@ const ProductDetailScreen = ({ navigation, route }: Props) => {
         pack: datasetProduct.priceStartingFrom.replace(/^₹\d+\/?/, '') || 'pack',
         about: datasetProduct.overview,
         nutrition: datasetProduct.nutrition,
+        nutritionItems: datasetProduct.nutritionItems,
         jsonSource: datasetProduct.source,
         howToUse: datasetProduct.howToUse,
         sourceTitle: datasetProduct.source,
         sourceText: datasetProduct.howToUse,
-        benefits: [
-          datasetProduct.nutrition,
-          datasetProduct.source,
-          datasetProduct.howToUse,
-        ],
+        highlights: datasetProduct.highlights || [],
       }
     : DETAILS[route.params.productId] || DETAILS['fresh-chicken'];
   const [favorite, setFavorite] = useState(false);
+  const [activeTab, setActiveTab] = useState(tabs[0]);
+  const isNutritionTab = activeTab === 'Nutrition';
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor={PAGE_YELLOW} barStyle="dark-content" />
+      <FoodClubHeader showBack onBack={() => navigation.goBack()} />
 
       <ScrollView
         style={styles.container}
@@ -211,28 +272,23 @@ const ProductDetailScreen = ({ navigation, route }: Props) => {
           />
           <TouchableOpacity
             activeOpacity={0.8}
-            style={[styles.heroButton, styles.backButton]}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.backIcon}>{ICONS.back}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.8}
             style={[styles.heroButton, styles.heartButton]}
             onPress={() => setFavorite(current => !current)}
           >
-            <Text style={[styles.heroIcon, favorite && styles.favorite]}>
-              {favorite ? ICONS.heart : ICONS.heartEmpty}
-            </Text>
+            <Icon
+              name={favorite ? 'heart' : 'heart-outline'}
+              color={favorite ? RED : DARK}
+              size={24}
+            />
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.8}
             style={[styles.heroButton, styles.shareButton]}
           >
-            <Text style={styles.shareIcon}>{ICONS.share}</Text>
+            <Icon name="share-variant-outline" color={DARK} size={23} />
           </TouchableOpacity>
           <View style={styles.hygieneBadge}>
-            <Text style={styles.hygieneIcon}>{ICONS.shield}</Text>
+            <Icon name="shield-check-outline" color={RED} size={21} />
             <Text style={styles.hygieneText}>100%{'\n'}Hygienic</Text>
           </View>
           <View style={styles.slideBadge}>
@@ -244,13 +300,15 @@ const ProductDetailScreen = ({ navigation, route }: Props) => {
           <View style={styles.titleRow}>
             <View style={styles.titleCol}>
               <Text style={styles.title}>{detail.title}</Text>
-              <Text style={styles.subtitle}>
-                {ICONS.chill} {detail.subtitle}
-              </Text>
+              <View style={styles.subtitleRow}>
+                <Icon name="snowflake" color={MUTED} size={14} />
+                <Text style={styles.subtitle}>{detail.subtitle}</Text>
+              </View>
             </View>
             <View style={styles.ratingWrap}>
               <View style={styles.ratingBadge}>
-                <Text style={styles.ratingText}>4.6 {ICONS.star}</Text>
+                <Text style={styles.ratingText}>4.6</Text>
+                <Icon name="star" color="#FFFFFF" size={12} />
               </View>
             </View>
           </View>
@@ -279,7 +337,7 @@ const ProductDetailScreen = ({ navigation, route }: Props) => {
           </View>
 
           <View style={styles.deliveryCard}>
-            <Text style={styles.deliveryIcon}>{ICONS.truck}</Text>
+            <Icon name="truck-delivery-outline" color={RED} size={23} />
             <View style={styles.deliveryTextCol}>
               <Text style={styles.deliveryTitle}>Ordering Coming Soon</Text>
               <Text style={styles.deliverySub}>
@@ -287,7 +345,8 @@ const ProductDetailScreen = ({ navigation, route }: Props) => {
               </Text>
             </View>
             <TouchableOpacity activeOpacity={0.85} style={styles.notifyButton}>
-              <Text style={styles.notifyText}>{ICONS.bell} Notify Me</Text>
+              <Icon name="bell-ring-outline" color={RED} size={13} />
+              <Text style={styles.notifyText}>Notify Me</Text>
             </TouchableOpacity>
           </View>
 
@@ -296,49 +355,90 @@ const ProductDetailScreen = ({ navigation, route }: Props) => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.tabsRow}
           >
-            {tabs.map((tab, index) => (
-              <Text
+            {tabs.map(tab => (
+              <TouchableOpacity
                 key={tab}
-                style={[styles.tabText, index === 0 && styles.activeTabText]}
+                activeOpacity={0.8}
+                onPress={() => setActiveTab(tab)}
+                style={styles.tabButton}
               >
-                {tab}
-              </Text>
+                <Icon
+                  name={tabIcons[tab]}
+                  color={activeTab === tab ? RED : MUTED}
+                  size={15}
+                />
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === tab && styles.activeTabText,
+                  ]}
+                >
+                  {tab}
+                </Text>
+              </TouchableOpacity>
             ))}
           </ScrollView>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About this product</Text>
-            <Text style={styles.aboutText}>{detail.about}</Text>
-
-            <View style={styles.jsonDetailsList}>
-              <View style={styles.jsonDetailRow}>
-                <Text style={styles.jsonDetailLabel}>Nutrition</Text>
-                <Text style={styles.jsonDetailText}>
-                  {detail.nutrition || detail.benefits[0]}
-                </Text>
+            <View style={styles.sectionTitleRow}>
+              <Icon
+                name={isNutritionTab ? 'food-apple-outline' : 'information-outline'}
+                color={RED}
+                size={18}
+              />
+              <Text style={styles.sectionTitle}>
+                {isNutritionTab ? 'Nutrition' : 'About this product'}
+              </Text>
+            </View>
+            {isNutritionTab ? (
+              <View style={styles.jsonDetailsList}>
+                {detail.nutritionItems.map(item => (
+                  <View key={item} style={styles.nutritionRow}>
+                    <Icon
+                      name="check-circle-outline"
+                      color={RED}
+                      size={16}
+                      style={styles.nutritionIcon}
+                    />
+                    <Text style={styles.jsonDetailText}>{item}</Text>
+                  </View>
+                ))}
               </View>
-            </View>
+            ) : (
+              <>
+                <Text style={styles.aboutText}>{detail.about}</Text>
 
-            <View style={styles.benefitsRow}>
-              {detail.benefits.map((benefit, index) => (
-                <View key={benefit} style={styles.benefitItem}>
-                  <Text style={styles.benefitIcon}>
-                    {[ICONS.leaf, ICONS.flask, ICONS.shield][index]}
-                  </Text>
-                  <Text style={styles.benefitText}>{benefit}</Text>
+                <View style={styles.benefitsRow}>
+                  {detail.highlights.map(highlight => (
+                    <View
+                      key={`${highlight.icon}-${highlight.title}`}
+                      style={styles.benefitItem}
+                    >
+                      <View style={styles.benefitIconCircle}>
+                        <HighlightIcon name={highlight.icon} />
+                      </View>
+                      <Text style={styles.benefitText}>{highlight.title}</Text>
+                    </View>
+                  ))}
                 </View>
-              ))}
-            </View>
+              </>
+            )}
           </View>
 
           <View style={styles.sourceCard}>
             <View style={styles.sourceHeader}>
-              <Text style={styles.sourceHeading}>Quality & Source</Text>
-              <Text style={styles.viewDetails}>View Details {ICONS.right}</Text>
+              <View style={styles.sourceHeadingRow}>
+                <Icon name="shield-check-outline" color={DARK} size={16} />
+                <Text style={styles.sourceHeading}>Quality & Source</Text>
+              </View>
+              <View style={styles.viewDetailsRow}>
+                <Text style={styles.viewDetails}>View Details</Text>
+                <Icon name="chevron-right" color={RED} size={16} />
+              </View>
             </View>
             <View style={styles.sourceBody}>
               <View style={styles.sourceIconCircle}>
-                <Text style={styles.sourceIcon}>{ICONS.shield}</Text>
+                <Icon name="shield-check-outline" color="#FFFFFF" size={22} />
               </View>
               <View style={styles.sourceTextCol}>
                 <Text style={styles.sourceTitle}>{detail.sourceTitle}</Text>
@@ -349,7 +449,12 @@ const ProductDetailScreen = ({ navigation, route }: Props) => {
           </View>
 
           <View style={styles.memberCard}>
-            <Text style={styles.memberIcon}>{ICONS.crown}</Text>
+            <Icon
+              name="crown-outline"
+              color={RED}
+              size={30}
+              style={styles.memberIcon}
+            />
             <View style={styles.memberTextCol}>
               <Text style={styles.memberTitle}>Member Benefits</Text>
               <Text style={styles.memberSub}>
@@ -376,40 +481,19 @@ const ProductDetailScreen = ({ navigation, route }: Props) => {
             style={styles.wishlistButton}
             onPress={() => setFavorite(current => !current)}
           >
-            <Text style={styles.wishlistText}>
-              {favorite ? ICONS.heart : ICONS.heartEmpty} Add to Wishlist
-            </Text>
+            <Icon
+              name={favorite ? 'heart' : 'heart-outline'}
+              color={RED}
+              size={15}
+            />
+            <Text style={styles.wishlistText}>Add to Wishlist</Text>
           </TouchableOpacity>
           <TouchableOpacity activeOpacity={0.85} style={styles.orderButton}>
-            <Text style={styles.orderText}>{ICONS.bag} Ordering Coming Soon</Text>
+            <Icon name="shopping-outline" color="#FFFFFF" size={15} />
+            <Text style={styles.orderText}>Ordering Coming Soon</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      <View style={styles.bottomTabs}>
-        <View style={styles.bottomTabItem}>
-          <Text style={[styles.bottomTabIcon, styles.bottomActive]}>
-            {ICONS.home}
-          </Text>
-          <Text style={[styles.bottomTabLabel, styles.bottomActive]}>Home</Text>
-        </View>
-        <View style={styles.bottomTabItem}>
-          <Text style={styles.bottomTabIcon}>{ICONS.grid}</Text>
-          <Text style={styles.bottomTabLabel}>Categories</Text>
-        </View>
-        <View style={styles.bottomTabItem}>
-          <Text style={styles.bottomTabIcon}>{ICONS.crown}</Text>
-          <Text style={styles.bottomTabLabel}>Membership</Text>
-        </View>
-        <View style={styles.bottomTabItem}>
-          <Text style={styles.bottomTabIcon}>{ICONS.bell}</Text>
-          <Text style={styles.bottomTabLabel}>Notifications</Text>
-        </View>
-        <View style={styles.bottomTabItem}>
-          <Text style={styles.bottomTabIcon}>{ICONS.account}</Text>
-          <Text style={styles.bottomTabLabel}>Profile</Text>
-        </View>
-      </View>
     </SafeAreaView>
   );
 };
@@ -443,10 +527,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  backButton: {
-    left: 14,
-    top: 12,
-  },
   heartButton: {
     right: 66,
     top: 12,
@@ -454,11 +534,6 @@ const styles = StyleSheet.create({
   shareButton: {
     right: 14,
     top: 12,
-  },
-  backIcon: {
-    color: DARK,
-    fontSize: 34,
-    lineHeight: 35,
   },
   heroIcon: {
     color: DARK,
@@ -527,17 +602,25 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '900',
   },
+  subtitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 4,
+  },
   subtitle: {
     color: MUTED,
     fontSize: 12,
     fontWeight: '700',
-    marginTop: 4,
   },
   ratingWrap: {
     alignItems: 'flex-end',
     paddingTop: 4,
   },
   ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
     borderRadius: 7,
     backgroundColor: RED,
     paddingHorizontal: 8,
@@ -638,6 +721,7 @@ const styles = StyleSheet.create({
   },
   deliveryTextCol: {
     flex: 1,
+    marginLeft: 8,
   },
   deliveryTitle: {
     color: DARK,
@@ -651,6 +735,9 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   notifyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: RED,
@@ -672,11 +759,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
+  tabButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingBottom: 5,
+  },
   activeTabText: {
     color: RED,
     borderBottomWidth: 2,
     borderBottomColor: RED,
-    paddingBottom: 5,
   },
   section: {
     paddingTop: 4,
@@ -685,6 +777,11 @@ const styles = StyleSheet.create({
     color: DARK,
     fontSize: 14,
     fontWeight: '900',
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   aboutText: {
     color: '#333333',
@@ -719,14 +816,46 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: '600',
   },
+  nutritionRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EFE5C2',
+  },
+  nutritionIcon: {
+    marginRight: 8,
+    marginTop: 1,
+  },
+  nutritionDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: RED,
+    marginRight: 8,
+    marginTop: 5,
+  },
   benefitsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
     marginTop: 10,
   },
   benefitItem: {
-    width: '31%',
+    width: '23%',
     alignItems: 'center',
+  },
+  benefitIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#F3D36A',
+    backgroundColor: '#FFFDF3',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 5,
   },
   benefitIcon: {
     color: RED,
@@ -749,7 +878,13 @@ const styles = StyleSheet.create({
   sourceHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 7,
+  },
+  sourceHeadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
   sourceHeading: {
     color: DARK,
@@ -760,6 +895,10 @@ const styles = StyleSheet.create({
     color: RED,
     fontSize: 10,
     fontWeight: '900',
+  },
+  viewDetailsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   sourceBody: {
     flexDirection: 'row',
@@ -875,6 +1014,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: RED,
+    flexDirection: 'row',
+    gap: 5,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -888,6 +1029,8 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 8,
     backgroundColor: '#D8A000',
+    flexDirection: 'row',
+    gap: 5,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -895,37 +1038,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '900',
-  },
-  bottomTabs: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 66,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    borderTopWidth: 1,
-    borderTopColor: '#EFEFEF',
-    backgroundColor: '#FFFFFF',
-    paddingBottom: 6,
-  },
-  bottomTabItem: {
-    width: width / 5,
-    alignItems: 'center',
-  },
-  bottomTabIcon: {
-    color: '#555555',
-    fontSize: 21,
-  },
-  bottomTabLabel: {
-    color: '#555555',
-    fontSize: 9,
-    fontWeight: '700',
-    marginTop: 2,
-  },
-  bottomActive: {
-    color: RED,
   },
 });
 

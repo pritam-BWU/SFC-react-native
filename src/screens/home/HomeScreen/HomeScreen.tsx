@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
@@ -9,16 +9,16 @@ import {
   StatusBar,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import FoodClubHeader from '../../../components/common/FoodClubHeader/FoodClubHeader';
 import {
-  cat1Products,
-  cat2Products,
+  allDatasetProducts,
   DatasetProduct,
+  productCategories,
 } from '../../../data/productDataset';
 import { RootStackParamList } from '../../../navigation/types';
 
@@ -30,31 +30,19 @@ const MUTED = '#5B5B5B';
 const PAGE_YELLOW = '#FFF0AD';
 const SOFT_YELLOW = '#FFF7D6';
 const BORDER = '#F1DFA0';
-const PRODUCT_WIDTH = (width - 44) / 2;
+const PRODUCT_WIDTH = Math.min(160, width * 0.42);
 
 const ICONS = {
-  menu: '\u2630',
-  search: '\u2315',
-  filter: '\u25BD',
-  chicken: '\u{1F414}',
-  soya: '\u{1FAD8}',
-  paneer: '\u25A7',
-  nugget: '\u25CF',
   shield: '\u{1F6E1}\uFE0F',
   leaf: '\u{1F331}',
   truck: '\u{1F69A}',
   check: '\u2713',
   heart: '\u2764\uFE0F',
   heartEmpty: '\u2661',
-  bell: '\u{1F514}',
-  plus: '+',
   right: '\u203A',
-  home: '\u2302',
-  grid: '\u25A6',
-  crown: '\u{1F451}',
-  bag: '\u{1F6CD}\uFE0F',
-  account: '\u{1F464}',
 };
+
+type ProductDetailId = RootStackParamList['ProductDetail']['productId'];
 
 type WhyItem = {
   id: string;
@@ -63,50 +51,8 @@ type WhyItem = {
   icon: string;
 };
 
-type Recipe = {
-  id: string;
-  title: string;
-  tag: string;
-  image: ImageSourcePropType;
-  productId: ProductDetailId;
-};
-
-type ProductDetailId = RootStackParamList['ProductDetail']['productId'];
-
-const images = {
-  freshChicken: {
-    uri: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500&q=85',
-  },
-  soyaChunks: {
-    uri: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=500&q=85',
-  },
-  paneer: {
-    uri: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500&q=85',
-  },
-  processedChicken: {
-    uri: 'https://images.unsplash.com/photo-1562967914-608f82629710?w=500&q=85',
-  },
-  banner: {
-    uri: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=900&q=85',
-  },
-  fishRecipe: {
-    uri: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=500&q=85',
-  },
-};
-
-const bannerImages: ImageSourcePropType[] = [
-  images.banner,
-  images.freshChicken,
-  images.paneer,
-];
-
 const whyItems: WhyItem[] = [
-  {
-    id: 'fresh',
-    title: '100% Fresh',
-    sub: 'Daily checked',
-    icon: ICONS.check,
-  },
+  { id: 'fresh', title: '100% Fresh', sub: 'Daily checked', icon: ICONS.check },
   {
     id: 'nutrition',
     title: 'High Protein',
@@ -119,36 +65,7 @@ const whyItems: WhyItem[] = [
     sub: 'Hygienic process',
     icon: ICONS.shield,
   },
-  {
-    id: 'delivery',
-    title: 'On-Time',
-    sub: 'Fast delivery',
-    icon: ICONS.truck,
-  },
-];
-
-const recipes: Recipe[] = [
-  {
-    id: 'chicken-recipe',
-    title: 'Chicken Curry',
-    tag: 'Chicken',
-    image: images.freshChicken,
-    productId: 'fresh-chicken',
-  },
-  {
-    id: 'paneer-recipe',
-    title: 'Paneer Tikka',
-    tag: 'Paneer',
-    image: images.paneer,
-    productId: 'paneer',
-  },
-  {
-    id: 'fish-recipe',
-    title: 'Fish Fry',
-    tag: 'Fish',
-    image: images.fishRecipe,
-    productId: 'fish',
-  },
+  { id: 'delivery', title: 'On-Time', sub: 'Fast delivery', icon: ICONS.truck },
 ];
 
 const SectionHeader = ({ title }: { title: string }) => (
@@ -161,26 +78,45 @@ const SectionHeader = ({ title }: { title: string }) => (
   </View>
 );
 
+const getDiscount = (index: number) => ['20% OFF', '15% OFF', '10% OFF'][index % 3];
+
+const getBannerDescription = (product: DatasetProduct) => {
+  const firstSentence = product.overview.split('.')[0];
+
+  return firstSentence
+    ? `${firstSentence}.`
+    : 'Fresh food choices prepared for everyday meals.';
+};
+
 const HomeScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList, 'Home'>>();
   const [bannerIndex, setBannerIndex] = useState(0);
   const [wishlist, setWishlist] = useState<string[]>([]);
-  const [searchText, setSearchText] = useState('');
 
-  const searchSuggestions = cat2Products
-    .filter(product =>
-      product.name.toLowerCase().includes(searchText.trim().toLowerCase()),
-    )
-    .slice(0, 10);
+  const bannerSlides = useMemo(
+    () =>
+      productCategories
+        .flatMap(category => category.products.slice(0, 1))
+        .map(product => ({
+          product,
+          eyebrow: product.category.replace('Organic Country ', ''),
+          title: product.name,
+          subtitle: product.highlightTitles[0] || 'Fresh Food Selection',
+          description: getBannerDescription(product),
+        })),
+    [],
+  );
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setBannerIndex(current => (current + 1) % bannerImages.length);
+      setBannerIndex(current =>
+        bannerSlides.length ? (current + 1) % bannerSlides.length : 0,
+      );
     }, 2500);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [bannerSlides.length]);
 
   const toggleWishlist = (id: string) => {
     setWishlist(current =>
@@ -194,10 +130,14 @@ const HomeScreen = () => {
     navigation.navigate('ProductDetail', { productId });
   };
 
-  const renderProductCard = (product: DatasetProduct) => (
+  const openSearchResults = (query: string) => {
+    navigation.navigate('SearchResults', { query });
+  };
+
+  const renderProductCard = (product: DatasetProduct, index: number) => (
     <TouchableOpacity
       key={product.id}
-      activeOpacity={0.85}
+      activeOpacity={0.86}
       style={styles.productCard}
       onPress={() => openDetail(product.id)}
     >
@@ -208,7 +148,7 @@ const HomeScreen = () => {
           resizeMode="cover"
         />
         <View style={styles.discountBadge}>
-          <Text style={styles.discountText}>Fresh</Text>
+          <Text style={styles.discountText}>{getDiscount(index)}</Text>
         </View>
         <TouchableOpacity
           activeOpacity={0.8}
@@ -232,21 +172,37 @@ const HomeScreen = () => {
         <Text style={styles.productName} numberOfLines={2}>
           {product.name}
         </Text>
-        <Text style={styles.productWeight} numberOfLines={1}>
+        <Text style={styles.productCategory} numberOfLines={1}>
           {product.category}
         </Text>
-        <Text style={styles.productDescription} numberOfLines={3}>
-          {product.overview}
+        <Text style={styles.productPrice} numberOfLines={1}>
+          {product.priceStartingFrom}
         </Text>
-        <View style={styles.productFooter}>
-          <Text style={styles.productPrice}>{product.priceStartingFrom}</Text>
-          <TouchableOpacity activeOpacity={0.85} style={styles.addButton}>
-            <Text style={styles.addText}>{ICONS.plus}</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </TouchableOpacity>
   );
+
+  const renderProductSection = (
+    title: string,
+    products: DatasetProduct[],
+    key: string,
+  ) => (
+    <View key={key} style={styles.productSection}>
+      <SectionHeader title={title} />
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.productsRail}
+      >
+        {products.slice(0, 5).map(renderProductCard)}
+      </ScrollView>
+    </View>
+  );
+
+  const activeBannerSlide = bannerSlides[bannerIndex];
+  const activeBannerProduct =
+    activeBannerSlide?.product || allDatasetProducts[0];
+  const heroImage: ImageSourcePropType | undefined = activeBannerProduct?.image;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -257,90 +213,41 @@ const HomeScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <TouchableOpacity activeOpacity={0.75} style={styles.headerButton}>
-            <Text style={styles.headerIcon}>{ICONS.menu}</Text>
-          </TouchableOpacity>
-
-          <View style={styles.logoWrap}>
-            <Text style={styles.logoText}>
-              <Text style={styles.logoRed}>Superfowl </Text>
-              <Text style={styles.logoDark}>Food</Text>
-              <Text style={styles.logoRed}>Club</Text>
-            </Text>
-            <Text style={styles.logoSub}>Better Food. Better You.</Text>
-          </View>
-
-          <View style={styles.headerSpacer} />
+        <View style={styles.topArea}>
+          <FoodClubHeader showSearch onSearch={openSearchResults} />
         </View>
-
-        <View style={styles.searchRow}>
-          <View style={styles.searchBox}>
-            <Text style={styles.searchIcon}>{ICONS.search}</Text>
-            <TextInput
-              value={searchText}
-              onChangeText={setSearchText}
-              style={styles.searchInput}
-              placeholder="Search soya, chaap, chunks..."
-              placeholderTextColor="#888888"
-            />
-          </View>
-          <TouchableOpacity activeOpacity={0.85} style={styles.filterButton}>
-            <Text style={styles.filterIcon}>{ICONS.filter}</Text>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.searchSuggestionsRow}
-        >
-          {searchSuggestions.map(product => (
-            <TouchableOpacity
-              key={product.id}
-              activeOpacity={0.85}
-              style={styles.searchChip}
-              onPress={() => openDetail(product.id)}
-            >
-              <Image
-                source={product.image}
-                style={styles.searchChipImage}
-                resizeMode="cover"
-              />
-              <View style={styles.searchChipTextCol}>
-                <Text style={styles.searchChipTitle} numberOfLines={1}>
-                  {product.name}
-                </Text>
-                <Text style={styles.searchChipPrice}>
-                  {product.priceStartingFrom}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
 
         <View style={styles.heroCard}>
           <View style={styles.heroCopy}>
-            <Text style={styles.heroTitle}>Premium Quality.</Text>
-            <Text style={styles.heroTitleRed}>Farm Fresh.</Text>
-            <Text style={styles.heroText}>
-              Fresh chicken, soya, paneer and ready-to-cook favorites delivered
-              with care.
+            <Text style={styles.heroEyebrow} numberOfLines={1}>
+              {activeBannerSlide?.eyebrow || activeBannerProduct?.category}
             </Text>
-            <TouchableOpacity activeOpacity={0.85} style={styles.heroButton}>
-              <Text style={styles.heroButtonText}>Shop Now</Text>
+            <Text style={styles.heroTitle} numberOfLines={2}>
+              {activeBannerSlide?.title || 'Premium Quality'}
+            </Text>
+            <Text style={styles.heroTitleRed} numberOfLines={1}>
+              {activeBannerSlide?.subtitle || 'Farm Fresh'}
+            </Text>
+            <Text style={styles.heroText}>
+              {activeBannerSlide?.description ||
+                'Fresh chicken, soya, paneer and ready-to-cook favorites delivered with care.'}
+            </Text>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={styles.heroButton}
+              onPress={() => activeBannerProduct && openDetail(activeBannerProduct.id)}
+            >
+              <Text style={styles.heroButtonText}>Explore Now</Text>
               <Text style={styles.heroButtonArrow}>{ICONS.right}</Text>
             </TouchableOpacity>
           </View>
-          <Image
-            source={bannerImages[bannerIndex]}
-            style={styles.heroImage}
-            resizeMode="cover"
-          />
+          {heroImage && (
+            <Image source={heroImage} style={styles.heroImage} resizeMode="cover" />
+          )}
         </View>
 
         <View style={styles.dotsRow}>
-          {bannerImages.map((_, index) => (
+          {bannerSlides.map((_, index) => (
             <TouchableOpacity
               key={index}
               activeOpacity={0.8}
@@ -351,34 +258,36 @@ const HomeScreen = () => {
         </View>
 
         <SectionHeader title="Shop By Category" />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesPanel}
-        >
-          {cat1Products.map(category => (
-            <TouchableOpacity
-              key={category.id}
-              activeOpacity={0.85}
-              onPress={() => openDetail(category.id)}
-              style={styles.categoryItem}
-            >
-              <View style={styles.categoryIconCircle}>
-                <Image
-                  source={category.image}
-                  style={styles.categoryImage}
-                  resizeMode="cover"
-                />
-              </View>
-              <Text style={styles.categoryLabel} numberOfLines={2}>
-                {category.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <View style={styles.categoriesPanel}>
+          {productCategories.map(category => {
+            const firstProduct = category.products[0];
+
+            return (
+              <TouchableOpacity
+                key={category.id}
+                activeOpacity={0.85}
+                onPress={() => firstProduct && openDetail(firstProduct.id)}
+                style={styles.categoryItem}
+              >
+                <View style={styles.categoryIconCircle}>
+                  {firstProduct && (
+                    <Image
+                      source={firstProduct.image}
+                      style={styles.categoryImage}
+                      resizeMode="cover"
+                    />
+                  )}
+                </View>
+                <Text style={styles.categoryLabel} numberOfLines={2}>
+                  {category.name.replace('Organic Country ', '')}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
         <View style={styles.whyPanel}>
-          <Text style={styles.whyHeading}>Why Choose Superfowl FoodClub?</Text>
+          <Text style={styles.whyHeading}>Why Choose Superfowl Food Club?</Text>
           <View style={styles.whyRow}>
             {whyItems.map(item => (
               <View key={item.id} style={styles.whyItem}>
@@ -392,72 +301,11 @@ const HomeScreen = () => {
           </View>
         </View>
 
-        <SectionHeader title="Top Picks for You" />
-        <View style={styles.productsRow}>
-          {cat1Products.map(renderProductCard)}
-        </View>
-
-        <SectionHeader title="Recipes & Inspiration" />
-        <View style={styles.recipesRow}>
-          {recipes.map(recipe => (
-            <TouchableOpacity
-              key={recipe.id}
-              activeOpacity={0.85}
-              onPress={() => openDetail(recipe.productId)}
-              style={styles.recipeCard}
-            >
-              <Image
-                source={recipe.image}
-                style={styles.recipeImage}
-                resizeMode="cover"
-              />
-              <View style={styles.recipeTextWrap}>
-                <Text style={styles.recipeTitle} numberOfLines={1}>
-                  {recipe.title}
-                </Text>
-                <Text style={styles.recipeTag}>{recipe.tag}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {renderProductSection('Top Picks for You', allDatasetProducts.slice(0, 5), 'top')}
+        {productCategories.map(category =>
+          renderProductSection(category.name, category.products, category.id),
+        )}
       </ScrollView>
-
-      <View style={styles.tabBar}>
-        <TouchableOpacity activeOpacity={0.75} style={styles.tabItem}>
-          <Text style={[styles.tabIcon, styles.tabActive]}>{ICONS.home}</Text>
-          <Text style={[styles.tabLabel, styles.tabActive]}>Home</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity activeOpacity={0.75} style={styles.tabItem}>
-          <Text style={styles.tabIcon}>{ICONS.grid}</Text>
-          <Text style={styles.tabLabel}>Categories</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.75}
-          style={styles.quickOrderTab}
-          onPress={() => navigation.navigate('Subscription')}
-        >
-          <View style={styles.quickOrderCircle}>
-            <Text style={styles.quickOrderIcon}>{ICONS.crown}</Text>
-          </View>
-          <Text style={styles.quickOrderLabel}>Membership</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity activeOpacity={0.75} style={styles.tabItem}>
-          <Text style={styles.tabIcon}>{ICONS.bell}</Text>
-          <Text style={styles.tabLabel}>Notifications</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.75}
-          style={styles.tabItem}
-          onPress={() => navigation.navigate('Profile')}
-        >
-          <Text style={styles.tabIcon}>{ICONS.account}</Text>
-          <Text style={styles.tabLabel}>Profile</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 };
@@ -472,134 +320,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   scrollContent: {
-    paddingBottom: 78,
+    paddingBottom: 84,
     backgroundColor: '#FFFFFF',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 4,
-    paddingBottom: 6,
+  topArea: {
     backgroundColor: PAGE_YELLOW,
-  },
-  headerButton: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerIcon: {
-    color: DARK,
-    fontSize: 23,
-    fontWeight: '900',
-  },
-  headerSpacer: {
-    width: 36,
-    height: 36,
-  },
-  logoWrap: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  logoText: {
-    fontSize: 20,
-    fontWeight: '900',
-  },
-  logoRed: {
-    color: RED,
-  },
-  logoDark: {
-    color: DARK,
-  },
-  logoSub: {
-    color: '#333333',
-    fontSize: 10,
-    fontWeight: '600',
-    marginTop: -2,
-  },
-  searchRow: {
-    flexDirection: 'row',
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: PAGE_YELLOW,
-  },
-  searchBox: {
-    flex: 1,
-    height: 44,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-  },
-  searchIcon: {
-    color: '#777777',
-    fontSize: 22,
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    color: DARK,
-    fontSize: 14,
-    paddingVertical: 0,
-  },
-  filterButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: RED,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  filterIcon: {
-    color: '#FFFFFF',
-    fontSize: 26,
-    fontWeight: '900',
-  },
-  searchSuggestionsRow: {
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-    backgroundColor: PAGE_YELLOW,
-  },
-  searchChip: {
-    width: 162,
-    minHeight: 54,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: BORDER,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 6,
-  },
-  searchChipImage: {
-    width: 42,
-    height: 42,
-    borderRadius: 10,
-    marginRight: 8,
-  },
-  searchChipTextCol: {
-    flex: 1,
-  },
-  searchChipTitle: {
-    color: DARK,
-    fontSize: 11,
-    fontWeight: '900',
-  },
-  searchChipPrice: {
-    color: RED,
-    fontSize: 10,
-    fontWeight: '900',
-    marginTop: 3,
+    paddingBottom: 4,
   },
   heroCard: {
-    height: 150,
-    marginHorizontal: 16,
-    marginTop: 8,
-    borderRadius: 14,
+    minHeight: 162,
+    marginHorizontal: 18,
+    marginTop: 16,
+    borderRadius: 16,
     backgroundColor: SOFT_YELLOW,
     borderWidth: 1,
     borderColor: BORDER,
@@ -608,50 +340,66 @@ const styles = StyleSheet.create({
   },
   heroCopy: {
     flex: 1,
-    padding: 13,
+    padding: 16,
     paddingRight: 8,
     justifyContent: 'center',
+  },
+  heroEyebrow: {
+    alignSelf: 'flex-start',
+    color: RED,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '900',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    overflow: 'hidden',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginBottom: 7,
   },
   heroTitle: {
     color: DARK,
     fontSize: 18,
+    lineHeight: 22,
     fontWeight: '900',
   },
   heroTitleRed: {
     color: RED,
-    fontSize: 18,
+    fontSize: 15,
+    lineHeight: 19,
     fontWeight: '900',
-    marginBottom: 6,
+    marginTop: 2,
+    marginBottom: 8,
   },
   heroText: {
     color: '#333333',
-    fontSize: 11,
-    lineHeight: 15,
-    marginBottom: 10,
+    fontSize: 11.5,
+    lineHeight: 16,
+    marginBottom: 12,
   },
   heroButton: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 22,
+    borderRadius: 24,
     backgroundColor: RED,
-    paddingHorizontal: 13,
-    paddingVertical: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
   heroButtonText: {
     color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '800',
+    fontSize: 14,
+    fontWeight: '900',
   },
   heroButtonArrow: {
     color: '#FFFFFF',
-    fontSize: 19,
+    fontSize: 20,
     fontWeight: '900',
     marginLeft: 8,
     marginTop: -1,
   },
   heroImage: {
-    width: width * 0.43,
+    width: width * 0.38,
     height: '100%',
   },
   dotsRow: {
@@ -659,30 +407,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    marginTop: 6,
-    marginBottom: 8,
+    marginTop: 8,
+    marginBottom: 14,
   },
   dot: {
-    width: 7,
-    height: 7,
+    width: 8,
+    height: 8,
     borderRadius: 4,
     backgroundColor: '#F2DFA0',
   },
   dotActive: {
-    width: 20,
+    width: 24,
     backgroundColor: RED,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    marginTop: 0,
-    marginBottom: 7,
+    paddingHorizontal: 18,
+    marginBottom: 10,
   },
   sectionTitle: {
     color: DARK,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '900',
   },
   viewAllRow: {
@@ -691,8 +438,8 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     color: RED,
-    fontSize: 13,
-    fontWeight: '800',
+    fontSize: 14,
+    fontWeight: '900',
   },
   viewAllIcon: {
     color: RED,
@@ -702,28 +449,28 @@ const styles = StyleSheet.create({
   },
   categoriesPanel: {
     flexDirection: 'row',
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-  },
-  categoryItem: {
-    width: 82,
-    alignItems: 'center',
-    borderRadius: 14,
+    justifyContent: 'space-between',
+    marginHorizontal: 18,
+    marginBottom: 20,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: BORDER,
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 7,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 14,
+  },
+  categoryItem: {
+    width: (width - 76) / 4,
+    alignItems: 'center',
   },
   categoryIconCircle: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: SOFT_YELLOW,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
     overflow: 'hidden',
   },
   categoryImage: {
@@ -732,84 +479,87 @@ const styles = StyleSheet.create({
   },
   categoryLabel: {
     color: DARK,
-    fontSize: 9,
-    fontWeight: '800',
-    lineHeight: 11,
-    minHeight: 22,
+    fontSize: 10.5,
+    fontWeight: '900',
+    lineHeight: 13,
+    minHeight: 28,
     textAlign: 'center',
   },
   whyPanel: {
-    marginHorizontal: 16,
-    marginBottom: 10,
-    borderRadius: 14,
+    marginHorizontal: 18,
+    marginBottom: 22,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: BORDER,
     backgroundColor: SOFT_YELLOW,
-    paddingVertical: 10,
+    paddingVertical: 16,
   },
   whyHeading: {
     color: RED,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '900',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 14,
   },
   whyRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
   },
   whyItem: {
     width: '24%',
     alignItems: 'center',
   },
   whyIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     borderWidth: 1,
     borderColor: '#F3D36A',
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 5,
+    marginBottom: 7,
   },
   whyIcon: {
     color: RED,
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '900',
   },
   whyTitle: {
     color: DARK,
-    fontSize: 10,
+    fontSize: 10.5,
     fontWeight: '900',
     textAlign: 'center',
   },
   whySub: {
     color: MUTED,
-    fontSize: 8.5,
-    lineHeight: 11,
+    fontSize: 9,
+    lineHeight: 12,
     textAlign: 'center',
-    marginTop: 2,
+    marginTop: 3,
   },
-  productsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  productSection: {
+    marginBottom: 20,
+  },
+  productsRail: {
     gap: 12,
-    paddingHorizontal: 16,
-    paddingBottom: 10,
+    paddingHorizontal: 18,
+    paddingBottom: 2,
   },
   productCard: {
     width: PRODUCT_WIDTH,
-    borderRadius: 10,
+    minHeight: 216,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: BORDER,
     backgroundColor: '#FFFFFF',
     overflow: 'hidden',
   },
   productImageWrap: {
-    height: 112,
+    height: 118,
     position: 'relative',
+    backgroundColor: '#FFFDF3',
   },
   productImage: {
     width: '100%',
@@ -817,184 +567,58 @@ const styles = StyleSheet.create({
   },
   discountBadge: {
     position: 'absolute',
-    top: 8,
-    left: 5,
+    top: 9,
+    left: 8,
     borderRadius: 12,
     backgroundColor: RED,
-    paddingHorizontal: 5,
-    paddingVertical: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   discountText: {
     color: '#FFFFFF',
-    fontSize: 7,
+    fontSize: 8,
     fontWeight: '900',
   },
   heartButton: {
     position: 'absolute',
-    top: 7,
-    right: 5,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: 'rgba(255,255,255,0.94)',
+    top: 8,
+    right: 8,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(255,255,255,0.96)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   heartIcon: {
     color: DARK,
-    fontSize: 15,
-    lineHeight: 16,
+    fontSize: 17,
+    lineHeight: 18,
   },
   heartActive: {
     color: RED,
   },
   productBody: {
-    minHeight: 148,
-    padding: 9,
+    padding: 10,
   },
   productName: {
     color: DARK,
-    fontSize: 12,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: '900',
-    minHeight: 30,
+    minHeight: 34,
   },
-  productWeight: {
+  productCategory: {
     color: MUTED,
-    fontSize: 9.5,
-    marginTop: 4,
-  },
-  productDescription: {
-    color: '#333333',
-    fontSize: 9.5,
-    lineHeight: 13,
-    fontWeight: '600',
-    minHeight: 39,
-    marginTop: 6,
-  },
-  productFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 10,
-  },
-  productPrice: {
-    color: DARK,
-    fontSize: 14,
-    fontWeight: '900',
-  },
-  productUnit: {
-    color: MUTED,
-    fontSize: 7.5,
-    fontWeight: '700',
-  },
-  addButton: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    backgroundColor: RED,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '900',
-    lineHeight: 18,
-  },
-  recipesRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
-  recipeCard: {
-    width: (width - 44) / 3,
-    height: 72,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: BORDER,
-    backgroundColor: '#FFFFFF',
-    overflow: 'hidden',
-  },
-  recipeImage: {
-    width: '100%',
-    height: 45,
-  },
-  recipeTextWrap: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  recipeTitle: {
-    color: DARK,
-    fontSize: 9.5,
-    fontWeight: '900',
-  },
-  recipeTag: {
-    color: RED,
-    fontSize: 8,
-    fontWeight: '800',
-    marginTop: 1,
-  },
-  tabBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 76,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    borderTopWidth: 1,
-    borderTopColor: '#EFEFEF',
-    backgroundColor: '#FFFFFF',
-    paddingBottom: 8,
-  },
-  tabItem: {
-    width: 68,
-    alignItems: 'center',
-    paddingTop: 8,
-  },
-  tabIcon: {
-    color: '#555555',
-    fontSize: 24,
-  },
-  tabActive: {
-    color: RED,
-  },
-  tabLabel: {
-    color: '#555555',
     fontSize: 10,
     fontWeight: '700',
-    marginTop: 2,
+    marginTop: 6,
   },
-  quickOrderTab: {
-    width: 82,
-    alignItems: 'center',
-    marginTop: -24,
-  },
-  quickOrderCircle: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor: RED,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 3,
-    elevation: 6,
-    shadowColor: RED,
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-  },
-  quickOrderIcon: {
-    color: '#FFFFFF',
-    fontSize: 26,
-  },
-  quickOrderLabel: {
+  productPrice: {
     color: RED,
-    fontSize: 9.5,
+    fontSize: 12,
     fontWeight: '900',
+    marginTop: 8,
   },
 });
 

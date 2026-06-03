@@ -1,0 +1,105 @@
+{
+  "id": "refund_cancellation_policy_001",
+  "title": "Refund & Cancellation Policy",
+  "is_active": true,
+  "sections": [
+    {
+      "heading": "Introduction",
+      "paragraphs": [
+        "This Refund & Cancellation Policy applies to memberships and related payments made through Superfowl Food Club, operated by Finfreed Club Pvt. Ltd.",
+        "By purchasing a membership or using paid services available on the platform, users agree to the terms outlined below."
+      ]
+    },
+    {
+      "heading": "Membership Payments",
+      "paragraphs": [
+        "Membership fees paid through the platform are processed using authorized payment methods available within the application or associated official channels.",
+        "Users are advised to review membership details, validity, pricing, and applicable terms carefully before completing any payment."
+      ]
+    },
+    {
+      "heading": "Refund Eligibility",
+      "paragraphs": [
+        "Refund requests may be considered only under the following circumstances:"
+      ],
+      "points": [
+        "Duplicate payment transactions",
+        "Failed transactions where payment was deducted but membership was not activated",
+        "Incorrect payment processing due to technical error",
+        "Unauthorized transactions verified by the company after review",
+        "Payment-related technical issues attributable to the platform"
+      ],
+      "after_points": [
+        "All refund requests are subject to verification and approval by Finfreed Club Pvt. Ltd."
+      ]
+    },
+    {
+      "heading": "Non-Refundable Situations",
+      "paragraphs": [
+        "Refunds may not be provided in cases including, but not limited to:"
+      ],
+      "points": [
+        "Change of mind after successful activation",
+        "Partial usage of membership duration",
+        "Dissatisfaction based on expected future services",
+        "Misunderstanding of membership benefits already disclosed before payment",
+        "Inactivity or non-usage of the platform",
+        "Failure to review platform policies before purchase",
+        "Suspension or termination due to policy violations"
+      ]
+    },
+    {
+      "heading": "Additional Refund Eligibility Conditions",
+      "paragraphs": [
+        "Certain membership plans may specifically mention whether they are refundable or non-refundable at the time of purchase. In cases where a membership plan is explicitly marked as refundable subject to applicable terms, users may request refunds in accordance with the conditions mentioned for that particular membership plan.",
+        "Where a membership plan is clearly identified as non-refundable at the time of purchase, users who voluntarily choose to purchase such membership shall generally not be entitled to claim refunds except in situations involving verified duplicate transactions, technical errors, unauthorized transactions, or circumstances otherwise required under applicable laws or platform policies."
+      ]
+    },
+    {
+      "heading": "Cancellation of Membership",
+      "paragraphs": [
+        "Users may request cancellation of future membership renewals, if applicable, through the available support channels or account settings.",
+        "Cancellation of membership does not automatically guarantee a refund unless eligible under this policy."
+      ]
+    },
+    {
+      "heading": "Processing Timeline",
+      "paragraphs": [
+        "Approved refunds, where applicable, are generally processed within a reasonable period depending on payment gateway processing timelines, banking procedures, and applicable financial regulations.",
+        "Actual credit timelines may vary depending on the payment method or financial institution involved."
+      ]
+    },
+    {
+      "heading": "Technical Errors",
+      "paragraphs": [
+        "In the event of payment deduction without successful membership activation, users are advised to contact official support channels with relevant transaction details for review and resolution."
+      ]
+    },
+    {
+      "heading": "Fraud Prevention & Verification",
+      "paragraphs": [
+        "The company reserves the right to request additional information, transaction proof, identity verification, or supporting documents before approving refund-related requests.",
+        "Refund requests involving suspicious, abusive, fraudulent, or unauthorized activities may be rejected and may lead to account restrictions where necessary."
+      ]
+    },
+    {
+      "heading": "Future Ecommerce Services",
+      "paragraphs": [
+        "As ordering and ecommerce-related services will be introduced gradually in future platform versions, membership purchases should not be interpreted as guaranteed access to specific future services, product availability, or fixed commercial benefits."
+      ]
+    },
+    {
+      "heading": "Modification of Policy",
+      "paragraphs": [
+        "Finfreed Club Pvt. Ltd. reserves the right to modify, update, or revise this Refund & Cancellation Policy at any time without prior notice."
+      ]
+    },
+    {
+      "heading": "Contact & Support",
+      "paragraphs": [
+        "For refund, cancellation, or payment-related assistance, users may contact the official support channels provided within the application.",
+        "By making payments through Superfowl Food Club, users acknowledge that they have read, understood, and agreed to this Refund & Cancellation Policy."
+      ]
+    }
+  ]
+}

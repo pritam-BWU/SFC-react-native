@@ -11,6 +11,15 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import FoodClubHeader from '../../../components/common/FoodClubHeader/FoodClubHeader';
+import {
+  getMembershipPlan,
+  membershipTypes,
+} from '../../../data/membershipData';
+import {
+  getMemberBenefitsForPlan,
+  memberBenefitsTitle,
+} from '../../../data/memberBenefits';
 import { RootStackParamList } from '../../../navigation/types';
 
 const { width, height } = Dimensions.get('window');
@@ -41,14 +50,6 @@ const ICONS = {
 };
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MembershipSuccess'>;
-type PlanId = RootStackParamList['MembershipSuccess']['planId'];
-
-const planNames: Record<PlanId, string> = {
-  basic: 'Basic',
-  silver: 'Silver',
-  gold: 'Gold',
-  platinum: 'Platinum',
-};
 
 const nextSteps = [
   {
@@ -73,31 +74,26 @@ const nextSteps = [
   },
 ];
 
-const benefits = [
-  ['Member Pricing Access', 'Special pricing on eligible products', ICONS.tag],
-  ['Early Access', 'Priority access when ordering launches', ICONS.clock],
-  [
-    'Product Insights',
-    'Detailed information on sourcing and freshness',
-    ICONS.document,
-  ],
-  [
-    'Saved Preferences',
-    'Save favorites and preferences for faster browsing',
-    ICONS.heart,
-  ],
-  ['Priority Support', 'Faster assistance for member queries', ICONS.headset],
+const benefitIcons = [
+  ICONS.tag,
+  ICONS.clock,
+  ICONS.document,
+  ICONS.heart,
+  ICONS.headset,
 ];
 
 const actions = [
-  ['Browse Products', ICONS.bag],
-  ['View My Plan', ICONS.crown],
-  ['Update Profile', ICONS.user],
-  ['Contact Support', ICONS.headset],
-];
+  { label: 'Browse Products', icon: ICONS.bag, route: 'Home' },
+  { label: 'View My Plan', icon: ICONS.crown, route: 'Subscription' },
+  { label: 'Update Profile', icon: ICONS.user, route: 'Profile' },
+  { label: 'Contact Support', icon: ICONS.headset, route: 'Profile' },
+] as const;
 
 const MembershipSuccessScreen = ({ navigation, route }: Props) => {
-  const planName = planNames[route.params.planId];
+  const membershipType = route.params?.membershipType ?? 'flexible';
+  const planId = route.params?.planId ?? 'bronze';
+  const membership = membershipTypes[membershipType];
+  const plan = getMembershipPlan(membershipType, planId);
   const nextScrollRef = useRef<ScrollView>(null);
   const nextIndexRef = useRef(0);
 
@@ -113,9 +109,16 @@ const MembershipSuccessScreen = ({ navigation, route }: Props) => {
     return () => clearInterval(timer);
   }, []);
 
+  if (!plan) {
+    return null;
+  }
+
+  const memberBenefits = getMemberBenefitsForPlan(membershipType, plan);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor="#FFFFFF" barStyle="dark-content" />
+      <FoodClubHeader title="Payment Successful" />
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.page}
@@ -170,8 +173,8 @@ const MembershipSuccessScreen = ({ navigation, route }: Props) => {
               Payment Successful!
             </Text>
             <Text style={styles.paymentText}>
-              Your {planName} membership is active and all member benefits are
-              unlocked.
+              Your {plan.name} {membership.shortTitle.toLowerCase()} is active
+              and all member benefits are unlocked.
             </Text>
           </View>
           <View style={styles.billingBox}>
@@ -205,14 +208,14 @@ const MembershipSuccessScreen = ({ navigation, route }: Props) => {
         </ScrollView>
 
         <View style={styles.benefitsCard}>
-          <Text style={styles.benefitsHeading}>Your Membership Benefits</Text>
+          <Text style={styles.benefitsHeading}>{memberBenefitsTitle}</Text>
           <View style={styles.benefitsRow}>
-            {benefits.map(([title, , icon]) => (
-              <View key={title} style={styles.benefitItem}>
-                <Text style={styles.benefitIcon}>{icon}</Text>
-                <Text style={styles.benefitTitle} numberOfLines={2}>
-                  {title}
+            {memberBenefits.map((benefit, index) => (
+              <View key={benefit} style={styles.benefitItem}>
+                <Text style={styles.benefitIcon}>
+                  {benefitIcons[index] || ICONS.check}
                 </Text>
+                <Text style={styles.benefitTitle}>{benefit}</Text>
               </View>
             ))}
           </View>
@@ -227,15 +230,16 @@ const MembershipSuccessScreen = ({ navigation, route }: Props) => {
 
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.actionRow}>
-          {actions.map(([label, icon]) => (
+          {actions.map(action => (
             <TouchableOpacity
-              key={label}
+              key={action.label}
               activeOpacity={0.8}
               style={styles.actionButton}
+              onPress={() => navigation.navigate(action.route)}
             >
-              <Text style={styles.actionIcon}>{icon}</Text>
+              <Text style={styles.actionIcon}>{action.icon}</Text>
               <Text style={styles.actionText} numberOfLines={1}>
-                {label}
+                {action.label}
               </Text>
               <Text style={styles.actionArrow}>{ICONS.right}</Text>
             </TouchableOpacity>
@@ -266,29 +270,6 @@ const MembershipSuccessScreen = ({ navigation, route }: Props) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      <View style={styles.bottomTabs}>
-        <View style={styles.bottomTab}>
-          <Text style={styles.tabIcon}>{ICONS.home}</Text>
-          <Text style={styles.tabText}>Home</Text>
-        </View>
-        <View style={styles.bottomTab}>
-          <Text style={styles.tabIcon}>{ICONS.grid}</Text>
-          <Text style={styles.tabText}>Products</Text>
-        </View>
-        <View style={styles.bottomTab}>
-          <Text style={[styles.tabIcon, styles.tabActive]}>{ICONS.crown}</Text>
-          <Text style={[styles.tabText, styles.tabActive]}>Membership</Text>
-        </View>
-        <View style={styles.bottomTab}>
-          <Text style={styles.tabIcon}>{ICONS.bell}</Text>
-          <Text style={styles.tabText}>Updates</Text>
-        </View>
-        <View style={styles.bottomTab}>
-          <Text style={styles.tabIcon}>{ICONS.user}</Text>
-          <Text style={styles.tabText}>Account</Text>
-        </View>
-      </View>
     </SafeAreaView>
   );
 };
@@ -309,88 +290,95 @@ const styles = StyleSheet.create({
     paddingBottom: 72,
   },
   heroRow: {
-    minHeight: Math.max(110, Math.min(138, height * 0.165)),
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+    minHeight: Math.max(210, Math.min(248, height * 0.29)),
+    alignItems: 'stretch',
   },
   welcomeCopy: {
-    flex: 1,
+    alignItems: 'center',
   },
   successCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     backgroundColor: RED,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   successCheck: {
     color: '#FFFFFF',
-    fontSize: 30,
+    fontSize: 34,
     fontWeight: '900',
   },
   heroTitle: {
     color: DARK,
-    fontSize: 20,
-    lineHeight: 23,
+    fontSize: 22,
+    lineHeight: 27,
     fontWeight: '900',
+    textAlign: 'center',
   },
   heroText: {
     color: '#333333',
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: '600',
-    marginTop: 6,
+    marginTop: 8,
+    textAlign: 'center',
   },
   memberCard: {
-    width: width * 0.4,
-    height: 104,
-    borderRadius: 12,
+    width: '100%',
+    minHeight: 154,
+    borderRadius: 16,
     backgroundColor: RED,
-    padding: 12,
-    justifyContent: 'center',
+    padding: 16,
+    justifyContent: 'space-between',
+    marginTop: 16,
   },
   cardBrand: {
     color: '#FFFFFF',
-    fontSize: 21,
+    fontSize: 25,
+    lineHeight: 30,
     fontWeight: '900',
   },
   cardMember: {
     color: SOFT_YELLOW,
-    fontSize: 16,
+    fontSize: 18,
+    lineHeight: 23,
     fontWeight: '900',
-    marginTop: 8,
+    marginTop: 4,
   },
   cardDetailsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 13,
+    justifyContent: 'space-between',
+    marginTop: 20,
   },
   cardDateCol: {
     flex: 1,
+    alignItems: 'flex-end',
   },
   cardLabel: {
     color: '#FFE8B3',
-    fontSize: 7,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: '700',
   },
   cardValue: {
     color: '#FFFFFF',
-    fontSize: 8,
+    fontSize: 14,
+    lineHeight: 18,
     fontWeight: '900',
-    marginTop: 2,
+    marginTop: 4,
   },
   cardDivider: {
     width: 1,
-    height: 26,
+    height: 42,
     backgroundColor: '#FFE8B3',
-    marginHorizontal: 8,
+    marginHorizontal: 16,
   },
   paymentCard: {
-    minHeight: Math.max(92, Math.min(112, height * 0.13)),
+    minHeight: Math.max(108, Math.min(126, height * 0.145)),
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 16,
@@ -399,7 +387,7 @@ const styles = StyleSheet.create({
     backgroundColor: PALE_YELLOW,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    marginTop: 10,
+    marginTop: 14,
     shadowColor: RED,
     shadowOpacity: 0.14,
     shadowRadius: 10,
@@ -520,48 +508,52 @@ const styles = StyleSheet.create({
   },
   benefitsCard: {
     minHeight: 132,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: BORDER,
     backgroundColor: '#FFFFFF',
-    padding: 9,
-    marginTop: 8,
+    padding: 12,
+    marginTop: 10,
   },
   benefitsHeading: {
     color: RED,
-    fontSize: 14,
+    fontSize: 17,
+    lineHeight: 22,
     fontWeight: '900',
   },
   benefitsRow: {
-    flexDirection: 'row',
-    marginTop: 12,
-    gap: 7,
+    marginTop: 14,
+    gap: 10,
   },
   benefitItem: {
-    flex: 1,
+    width: '100%',
+    minHeight: 76,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 72,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: BORDER,
     backgroundColor: PALE_YELLOW,
-    paddingHorizontal: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   benefitIcon: {
+    width: 42,
     color: RED,
-    fontSize: 24,
+    fontSize: 27,
+    textAlign: 'center',
+    marginRight: 12,
   },
   benefitTitle: {
+    flex: 1,
     color: DARK,
-    fontSize: 8.5,
-    lineHeight: 10.5,
+    fontSize: 14,
+    lineHeight: 19,
     fontWeight: '900',
-    textAlign: 'center',
-    marginTop: 6,
+    textAlign: 'left',
   },
   noteBox: {
-    height: 34,
+    minHeight: 46,
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 8,
@@ -585,8 +577,8 @@ const styles = StyleSheet.create({
   noteText: {
     flex: 1,
     color: DARK,
-    fontSize: 8,
-    lineHeight: 10,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: '700',
   },
   actionRow: {
@@ -670,37 +662,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '900',
     textAlign: 'center',
-  },
-  bottomTabs: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 58,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    borderTopWidth: 1,
-    borderTopColor: '#EFEFEF',
-    backgroundColor: '#FFFFFF',
-    paddingBottom: 4,
-  },
-  bottomTab: {
-    width: width / 5,
-    alignItems: 'center',
-  },
-  tabIcon: {
-    color: '#444444',
-    fontSize: 20,
-  },
-  tabText: {
-    color: '#444444',
-    fontSize: 9,
-    fontWeight: '700',
-    marginTop: 2,
-  },
-  tabActive: {
-    color: RED,
   },
 });
 

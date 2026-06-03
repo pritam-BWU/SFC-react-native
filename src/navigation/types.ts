@@ -2,16 +2,30 @@ export type RootStackParamList = {
   Login: undefined;
   SignUp: undefined;
   Home: undefined;
+  Categories: undefined;
+  Notifications: undefined;
   Profile: undefined;
   ProductDetail: {
     productId: string;
   };
+  SearchResults: {
+    query: string;
+  };
   Subscription: undefined;
+  MembershipPlanList: {
+    membershipType: 'flexible' | 'durable';
+  };
+  MembershipPlanDetail: {
+    membershipType: 'flexible' | 'durable';
+    planId: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
+  };
   MembershipCheckout: {
-    planId: 'basic' | 'silver' | 'gold' | 'platinum';
+    membershipType: 'flexible' | 'durable';
+    planId: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
   };
   MembershipSuccess: {
-    planId: 'basic' | 'silver' | 'gold' | 'platinum';
+    membershipType: 'flexible' | 'durable';
+    planId: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
   };
   AdminDashboard: undefined;
 };
