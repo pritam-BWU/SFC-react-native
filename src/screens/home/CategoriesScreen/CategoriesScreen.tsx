@@ -24,7 +24,11 @@ const PAGE_YELLOW = '#FFF0AD';
 const SOFT_YELLOW = '#FFF7D6';
 const BORDER = '#F1DFA0';
 
-const CategoriesScreen = ({ navigation }: Props) => {
+const CategoriesScreen = ({ navigation, route }: Props) => {
+  const categories = route.params?.categoryId
+    ? productCategories.filter(category => category.id === route.params?.categoryId)
+    : productCategories;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor={PAGE_YELLOW} barStyle="dark-content" />
@@ -35,13 +39,13 @@ const CategoriesScreen = ({ navigation }: Props) => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.subtitle}>Browse every Superfowl FoodClub section.</Text>
+          <Text style={styles.subtitle}>Browse Superfowl FoodClub products by category.</Text>
         </View>
 
-        {productCategories.map(category => (
+        {categories.map(category => (
           <View key={category.id} style={styles.section}>
             <Text style={styles.sectionTitle}>{category.name}</Text>
-            {category.products.slice(0, 5).map(product => (
+            {category.products.slice(0, 10).map(product => (
               <TouchableOpacity
                 key={product.id}
                 activeOpacity={0.84}

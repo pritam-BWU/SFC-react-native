@@ -17,6 +17,7 @@ import MembershipPlanListScreen from '../screens/home/MembershipPlanListScreen/M
 import MembershipSuccessScreen from '../screens/home/MembershipSuccessScreen/MembershipSuccessScreen';
 import NotificationsScreen from '../screens/home/NotificationsScreen/NotificationsScreen';
 import ProductDetailScreen from '../screens/home/ProductDetailScreen/ProductDetailScreen';
+import QualitySourceScreen from '../screens/home/QualitySourceScreen/QualitySourceScreen';
 import ProfileScreen from '../screens/home/ProfileScreen/ProfileScreen';
 import SearchResultsScreen from '../screens/home/SearchResultsScreen/SearchResultsScreen';
 import SubscriptionScreen from '../screens/home/SubscriptionScreen/SubscriptionScreen';
@@ -79,6 +80,7 @@ const AppNavigator = () => {
           <Stack.Screen name="Notifications" component={NotificationsScreen} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
           <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+          <Stack.Screen name="QualitySource" component={QualitySourceScreen} />
           <Stack.Screen name="SearchResults" component={SearchResultsScreen} />
           <Stack.Screen name="Subscription" component={SubscriptionScreen} />
           <Stack.Screen

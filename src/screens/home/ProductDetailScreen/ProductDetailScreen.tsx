@@ -32,6 +32,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ProductDetail'>;
 type Detail = {
   title: string;
   subtitle: string;
+  categoryId: string;
+  category: string;
   image: ImageSourcePropType;
   marketPrice: string;
   memberPrice: string;
@@ -75,9 +77,11 @@ const DETAILS: Record<string, Detail> = {
   'fresh-chicken': {
     title: 'Fresh Chicken Curry Cut',
     subtitle: 'Chilled | 500g Pack',
+    categoryId: 'cat-1',
+    category: 'Organic Country Chicken',
     image: images.chicken,
     marketPrice: '\u20B9159',
-    memberPrice: '20-40% OFF',
+    memberPrice: '20 - 40% off Approx',
     save: '20-40%',
     pack: '500g',
     about:
@@ -95,9 +99,11 @@ const DETAILS: Record<string, Detail> = {
   'soya-chunks': {
     title: 'Soya Chunks',
     subtitle: 'Protein Rich | 500g Pack',
+    categoryId: 'cat-2',
+    category: 'Protein Rich Soya Selection',
     image: images.soya,
     marketPrice: '\u20B9109',
-    memberPrice: '20-40% OFF',
+    memberPrice: '20 - 40% off Approx',
     save: '20-40%',
     pack: '500g',
     about:
@@ -115,9 +121,11 @@ const DETAILS: Record<string, Detail> = {
   paneer: {
     title: 'Fresh Paneer',
     subtitle: 'Soft Cubes | 250g Pack',
+    categoryId: 'cat-3',
+    category: 'Dairy & Paneer Collection',
     image: images.paneer,
     marketPrice: '\u20B9129',
-    memberPrice: '20-40% OFF',
+    memberPrice: '20 - 40% off Approx',
     save: '20-40%',
     pack: '250g',
     about:
@@ -135,9 +143,11 @@ const DETAILS: Record<string, Detail> = {
   'processed-chicken': {
     title: 'Chicken Nuggets',
     subtitle: 'Ready To Cook | 250g Pack',
+    categoryId: 'cat-4',
+    category: 'Ready-to-Cook Delights',
     image: images.processed,
     marketPrice: '\u20B9149',
-    memberPrice: '20-40% OFF',
+    memberPrice: '20 - 40% off Approx',
     save: '20-40%',
     pack: '250g',
     about:
@@ -155,9 +165,11 @@ const DETAILS: Record<string, Detail> = {
   fish: {
     title: 'Fresh Fish',
     subtitle: 'Cleaned | 500g Pack',
+    categoryId: 'cat-1',
+    category: 'Organic Country Chicken',
     image: images.fish,
     marketPrice: '\u20B9320',
-    memberPrice: '20-40% OFF',
+    memberPrice: '20 - 40% off Approx',
     save: '20-40%',
     pack: '500g',
     about:
@@ -233,10 +245,12 @@ const ProductDetailScreen = ({ navigation, route }: Props) => {
   const detail: Detail = datasetProduct
     ? {
         title: datasetProduct.name,
-        subtitle: `${datasetProduct.category} | ${datasetProduct.priceStartingFrom}`,
+        subtitle: datasetProduct.priceStartingFrom,
+        categoryId: datasetProduct.categoryId,
+        category: datasetProduct.category,
         image: datasetProduct.image,
         marketPrice: datasetProduct.priceStartingFrom,
-        memberPrice: '20-40% OFF',
+        memberPrice: '20 - 40% off Approx',
         save: '20-40%',
         pack: datasetProduct.priceStartingFrom.replace(/^₹\d+\/?/, '') || 'pack',
         about: datasetProduct.overview,
@@ -245,7 +259,8 @@ const ProductDetailScreen = ({ navigation, route }: Props) => {
         jsonSource: datasetProduct.source,
         howToUse: datasetProduct.howToUse,
         sourceTitle: datasetProduct.source,
-        sourceText: datasetProduct.howToUse,
+        sourceText:
+          'Each and every item are sourced from reliable farms that follows high standards of hygiene',
         highlights: datasetProduct.highlights || [],
       }
     : DETAILS[route.params.productId] || DETAILS['fresh-chicken'];
@@ -291,24 +306,14 @@ const ProductDetailScreen = ({ navigation, route }: Props) => {
             <Icon name="shield-check-outline" color={RED} size={21} />
             <Text style={styles.hygieneText}>100%{'\n'}Hygienic</Text>
           </View>
-          <View style={styles.slideBadge}>
-            <Text style={styles.slideText}>1/5</Text>
-          </View>
         </View>
 
         <View style={styles.content}>
           <View style={styles.titleRow}>
             <View style={styles.titleCol}>
               <Text style={styles.title}>{detail.title}</Text>
-              <View style={styles.subtitleRow}>
-                <Icon name="snowflake" color={MUTED} size={14} />
-                <Text style={styles.subtitle}>{detail.subtitle}</Text>
-              </View>
-            </View>
-            <View style={styles.ratingWrap}>
-              <View style={styles.ratingBadge}>
-                <Text style={styles.ratingText}>4.6</Text>
-                <Icon name="star" color="#FFFFFF" size={12} />
+              <View style={styles.categoryBadge}>
+                <Text style={styles.categoryBadgeText}>{detail.category}</Text>
               </View>
             </View>
           </View>
@@ -319,7 +324,10 @@ const ProductDetailScreen = ({ navigation, route }: Props) => {
               <Text style={styles.marketPrice}>
                 {detail.marketPrice}
               </Text>
-              <Text style={styles.kgText}>({detail.pack})</Text>
+              <Text style={styles.kgText}>
+                Pricing may vary according to product type, availability,
+                operational region.
+              </Text>
             </View>
             <View style={styles.priceDivider} />
             <View style={styles.priceBlock}>
@@ -327,12 +335,10 @@ const ProductDetailScreen = ({ navigation, route }: Props) => {
               <Text style={styles.memberPrice}>
                 {detail.memberPrice}
               </Text>
-              <Text style={styles.kgText}>Eligible on selected orders</Text>
-            </View>
-            <View style={styles.saveBox}>
-              <Text style={styles.saveTitle}>Offer</Text>
-              <Text style={styles.savePrice}>{detail.save}</Text>
-              <Text style={styles.saveSub}>OFF</Text>
+              <Text style={styles.kgText}>
+                Pricing benefit may vary according to member category, member type
+                and selected products.
+              </Text>
             </View>
           </View>
 
@@ -409,7 +415,17 @@ const ProductDetailScreen = ({ navigation, route }: Props) => {
                 <Text style={styles.aboutText}>{detail.about}</Text>
 
                 <View style={styles.benefitsRow}>
-                  {detail.highlights.map(highlight => (
+                  {(detail.highlights.length
+                    ? detail.highlights
+                    : [
+                        { icon: 'ShieldCheck', title: 'Quality Checked' },
+                        { icon: 'Snowflake', title: 'Freshly Packed' },
+                        { icon: 'Dumbbell', title: 'Protein Rich' },
+                        { icon: 'Leaf', title: 'Reliable Source' },
+                      ]
+                  )
+                    .slice(0, 4)
+                    .map(highlight => (
                     <View
                       key={`${highlight.icon}-${highlight.title}`}
                       style={styles.benefitItem}
@@ -431,10 +447,18 @@ const ProductDetailScreen = ({ navigation, route }: Props) => {
                 <Icon name="shield-check-outline" color={DARK} size={16} />
                 <Text style={styles.sourceHeading}>Quality & Source</Text>
               </View>
-              <View style={styles.viewDetailsRow}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={styles.viewDetailsRow}
+                onPress={() =>
+                  navigation.navigate('QualitySource', {
+                    categoryId: detail.categoryId,
+                  })
+                }
+              >
                 <Text style={styles.viewDetails}>View Details</Text>
                 <Icon name="chevron-right" color={RED} size={16} />
-              </View>
+              </TouchableOpacity>
             </View>
             <View style={styles.sourceBody}>
               <View style={styles.sourceIconCircle}>
@@ -458,24 +482,22 @@ const ProductDetailScreen = ({ navigation, route }: Props) => {
             <View style={styles.memberTextCol}>
               <Text style={styles.memberTitle}>Member Benefits</Text>
               <Text style={styles.memberSub}>
-                Eligible Members will receive selected pricing benefits upon
-                ordering services become available.
-              </Text>
-              <Text style={styles.memberNote}>
-                Membership benefits may vary by product, location, and availability.
+                You get selected pricing benefits upon ordering services become
+                available. Benefits may vary according to product, availability &
+                region
               </Text>
             </View>
-            <TouchableOpacity activeOpacity={0.85} style={styles.planButton}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={styles.planButton}
+              onPress={() => navigation.navigate('Subscription')}
+            >
               <Text style={styles.planText}>View Plans</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={styles.actionBar}>
-          <View style={styles.bottomPriceCol}>
-            <Text style={styles.bottomPrice}>{detail.marketPrice}</Text>
-            <Text style={styles.bottomLabel}>Starting From</Text>
-          </View>
           <TouchableOpacity
             activeOpacity={0.85}
             style={styles.wishlistButton}
@@ -612,6 +634,20 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 12,
     fontWeight: '700',
+  },
+  categoryBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 7,
+    backgroundColor: '#2EAAC4',
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    marginTop: 6,
+  },
+  categoryBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '900',
   },
   ratingWrap: {
     alignItems: 'flex-end',

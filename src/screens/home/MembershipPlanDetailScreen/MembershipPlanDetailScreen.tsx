@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
+  Modal,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -58,12 +59,14 @@ const MembershipPlanDetailScreen = ({ navigation, route }: Props) => {
   const planId = route.params?.planId ?? 'bronze';
   const membership = membershipTypes[membershipType];
   const plan = getMembershipPlan(membershipType, planId);
+  const [showEligibilityInfo, setShowEligibilityInfo] = useState(false);
 
   if (!plan) {
     return null;
   }
 
   const memberBenefits = getMemberBenefitsForPlan(membershipType, plan);
+  const gst = plan.membershipFeeWithGst - plan.membershipFee;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -112,36 +115,53 @@ const MembershipPlanDetailScreen = ({ navigation, route }: Props) => {
               on selected products
             </Text>
           </View>
-          <Text style={styles.infoIcon}>{ICONS.info}</Text>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setShowEligibilityInfo(true)}
+          >
+            <Text style={styles.infoIcon}>{ICONS.info}</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.priceCard}>
           <Text style={styles.priceHeading}>Plan Price Details</Text>
-          <View style={styles.priceGrid}>
-            <View style={styles.priceItem}>
-              <Text style={styles.priceLabel}>Monthly KG</Text>
-              <Text style={styles.priceValue}>{plan.monthlyConsumptionKg}</Text>
+          <View style={styles.breakdownList}>
+            <View style={styles.breakdownLine}>
+              <Text style={styles.priceLabel}>Membership Fees</Text>
+              <Text style={styles.priceValue}>{formatMoney(plan.membershipFee)}</Text>
             </View>
-            <View style={styles.priceItem}>
-              <Text style={styles.priceLabel}>Yearly KG</Text>
-              <Text style={styles.priceValue}>{plan.yearlyConsumptionKg}</Text>
+            <View style={styles.breakdownLine}>
+              <Text style={styles.priceLabel}>GST (18%)</Text>
+              <Text style={styles.priceValue}>{formatMoney(gst)}</Text>
             </View>
-            <View style={styles.priceItem}>
-              <Text style={styles.priceLabel}>Approx / KG</Text>
+            <View style={styles.breakdownLine}>
+              <Text style={styles.priceLabel}>Fees + GST</Text>
               <Text style={styles.priceValue}>
-                {formatMoney(plan.approxPricePerKg)}
+                {formatMoney(plan.membershipFeeWithGst)}
               </Text>
             </View>
           </View>
           <View style={styles.offerRow}>
             <View>
-              <Text style={styles.offerLabel}>Today's Offer</Text>
+              <Text style={styles.offerLabel}>Total Payable</Text>
               <Text style={styles.offerSub}>
-                Fees + GST value {formatMoney(plan.membershipFeeWithGst)}
+                Inclusive of all taxes
               </Text>
             </View>
             <Text style={styles.offerPrice}>{formatMoney(plan.offerPrice)}</Text>
           </View>
+          <TouchableOpacity
+            activeOpacity={0.86}
+            style={styles.securePayButton}
+            onPress={() =>
+              navigation.navigate('MembershipCheckout', {
+                membershipType,
+                planId,
+              })
+            }
+          >
+            <Text style={styles.securePayText}>Pay Securely Now</Text>
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.sectionTitle}>{memberBenefitsTitle}</Text>
@@ -173,6 +193,30 @@ const MembershipPlanDetailScreen = ({ navigation, route }: Props) => {
           <Text style={styles.joinText}>View Details & Payment</Text>
         </TouchableOpacity>
       </View>
+      <Modal
+        visible={showEligibilityInfo}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowEligibilityInfo(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.infoCard}>
+            <Text style={styles.infoTitle}>Member Pricing Eligibility</Text>
+            <Text style={styles.infoText}>
+              Selected products may offer estimated member pricing advantages
+              generally ranging lower than standard market references depending
+              on category, availability, and operational conditions.
+            </Text>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={styles.infoButton}
+              onPress={() => setShowEligibilityInfo(false)}
+            >
+              <Text style={styles.infoButtonText}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -332,16 +376,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '900',
   },
-  priceGrid: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 12,
-  },
-  priceItem: {
-    flex: 1,
+  breakdownList: {
     borderRadius: 8,
     backgroundColor: '#FFFFFF',
-    padding: 9,
+    marginTop: 12,
+    overflow: 'hidden',
+  },
+  breakdownLine: {
+    minHeight: 38,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
+    paddingHorizontal: 10,
+    gap: 10,
   },
   priceLabel: {
     color: MUTED,
@@ -379,6 +428,19 @@ const styles = StyleSheet.create({
   offerPrice: {
     color: RED,
     fontSize: 20,
+    fontWeight: '900',
+  },
+  securePayButton: {
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: RED,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  securePayText: {
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '900',
   },
   benefitList: {
@@ -430,6 +492,46 @@ const styles = StyleSheet.create({
   joinText: {
     color: '#FFFFFF',
     fontSize: 15,
+    fontWeight: '900',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.48)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 22,
+  },
+  infoCard: {
+    width: '100%',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: '#FFFFFF',
+    padding: 18,
+  },
+  infoTitle: {
+    color: DARK,
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  infoText: {
+    color: '#333333',
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '600',
+    marginTop: 10,
+  },
+  infoButton: {
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: RED,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  infoButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
     fontWeight: '900',
   },
 });

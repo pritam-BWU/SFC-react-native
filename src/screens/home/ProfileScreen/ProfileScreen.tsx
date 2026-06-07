@@ -5,6 +5,7 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -35,6 +36,7 @@ const ICONS = {
   user: '\u{1F464}',
   home: '\u2302',
   products: '\u25A6',
+  contact: '\u260E',
   crown: '\u{1F451}',
   account: '\u25A3',
   support: '\u260E',
@@ -43,6 +45,8 @@ const ICONS = {
   disclaimer: '!',
   settings: '\u2699',
   share: '\u22EF',
+  logout: '\u21B5',
+  attach: '\u25A7',
   right: '\u203A',
   down: '\u2304',
   edit: '\u270E',
@@ -79,7 +83,7 @@ type MenuSection = {
 type DetailContent = {
   title: string;
   body: string;
-  type?: 'text' | 'faqs' | 'report';
+  type?: 'text' | 'faqs' | 'report' | 'submitted';
 };
 
 type PolicyBlock = {
@@ -165,26 +169,14 @@ const policyDetails: Record<string, DetailContent> = {
 
 const faqDocument = faqsPolicy as FaqDocument;
 
-const reportIssueSections = [
-  {
-    title: 'What can you report?',
-    text: 'Login trouble, wrong product details, missing membership information, payment display issues, or any app bug that affects your experience.',
-  },
-  {
-    title: 'Details to include',
-    text: 'Mention the screen name, what you expected, what happened, and any membership or payment reference if the issue is related to billing.',
-  },
-  {
-    title: 'Privacy note',
-    text: 'Support may use your account details only to investigate and respond to the reported issue.',
-  },
-];
-
 const ProfileScreen = ({ navigation }: Props) => {
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({});
   const [activeDetail, setActiveDetail] = useState<DetailContent | null>(null);
+  const [activeFaqCategory, setActiveFaqCategory] = useState<string | null>(null);
+  const [reportMessage, setReportMessage] = useState('');
+  const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
 
   const toggleSection = (title: string) => {
     setExpandedSections(current => ({
@@ -198,10 +190,6 @@ const ProfileScreen = ({ navigation }: Props) => {
       title: 'Home',
       icon: ICONS.home,
       onPress: () => navigation.navigate('Home'),
-    },
-    {
-      title: 'Products',
-      icon: ICONS.products,
     },
     {
       title: 'Membership',
@@ -250,6 +238,12 @@ const ProfileScreen = ({ navigation }: Props) => {
           outlineIcon: ICONS.reportOutline,
           detail:
             'Use this option to report login trouble, wrong product details, missing membership information, payment display issues, or app bugs. Our team may use your account details only to investigate and respond.',
+        },
+        {
+          label: 'Contact Us',
+          icon: ICONS.contact,
+          detail:
+            'Email: suoerfowlfoods@gmail.com\n\nContact Number: +91 90000 00000',
         },
       ],
     },
@@ -343,6 +337,11 @@ const ProfileScreen = ({ navigation }: Props) => {
         },
       ],
     },
+    {
+      title: 'Logout',
+      icon: ICONS.logout,
+      onPress: () => navigation.navigate('Login'),
+    },
   ];
 
   return (
@@ -421,6 +420,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                       style={styles.subRow}
                       onPress={() => {
                         if (item.label === 'FAQs') {
+                          setActiveFaqCategory(null);
                           setActiveDetail({
                             title: faqsPolicy.title || 'FAQs',
                             body: '',
@@ -431,7 +431,7 @@ const ProfileScreen = ({ navigation }: Props) => {
 
                         if (item.label === 'Report an Issue') {
                           setActiveDetail({
-                            title: item.label,
+                            title: 'Understood',
                             body: item.detail || '',
                             type: 'report',
                           });
@@ -477,42 +477,84 @@ const ProfileScreen = ({ navigation }: Props) => {
             >
               {activeDetail?.type === 'faqs' ? (
                 <View style={styles.faqList}>
-                  {faqDocument.categories?.map(category => (
-                    <View key={category.heading} style={styles.faqCategory}>
-                      <View style={styles.faqCategoryHeader}>
-                        <Text style={styles.faqCategoryIcon}>
-                          {ICONS.helpOutline}
-                        </Text>
-                        <Text style={styles.faqCategoryTitle}>
-                          {category.heading}
-                        </Text>
-                      </View>
-                      {category.faqs.map(faq => (
-                        <View key={faq.faq_id} style={styles.faqCard}>
-                          <Text style={styles.faqQuestion}>
-                            {faq.question}
+                  {!activeFaqCategory
+                    ? faqDocument.categories?.map(category => (
+                        <TouchableOpacity
+                          key={category.heading}
+                          activeOpacity={0.78}
+                          style={styles.faqCategoryHeader}
+                          onPress={() => setActiveFaqCategory(category.heading)}
+                        >
+                          <Text style={styles.faqCategoryTitle}>
+                            {category.heading}
                           </Text>
-                          <Text style={styles.faqAnswer}>{faq.answer}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  ))}
+                          <Text style={styles.subArrow}>{ICONS.right}</Text>
+                        </TouchableOpacity>
+                      ))
+                    : faqDocument.categories
+                        ?.find(category => category.heading === activeFaqCategory)
+                        ?.faqs.map(faq => (
+                          <View key={faq.faq_id} style={styles.faqCard}>
+                            <Text style={styles.faqQuestion}>
+                              {faq.question}
+                            </Text>
+                            <Text style={styles.faqAnswer}>{faq.answer}</Text>
+                          </View>
+                        ))}
                 </View>
               ) : activeDetail?.type === 'report' ? (
-                <View style={styles.reportList}>
-                  <View style={styles.reportHero}>
-                    <Text style={styles.reportHeroIcon}>{ICONS.bug}</Text>
-                    <Text style={styles.reportHeroText}>
-                      Share the issue clearly so support can review it faster.
-                    </Text>
-                  </View>
-                  {reportIssueSections.map(section => (
-                    <View key={section.title} style={styles.reportCard}>
-                      <Text style={styles.reportTitle}>{section.title}</Text>
-                      <Text style={styles.reportText}>{section.text}</Text>
+                <View style={styles.reportForm}>
+                  <Text style={styles.reportHint}>
+                    Write your issue details and attach files if needed.
+                  </Text>
+                  <TextInput
+                    value={reportMessage}
+                    onChangeText={setReportMessage}
+                    multiline
+                    textAlignVertical="top"
+                    placeholder="Write your message..."
+                    placeholderTextColor={MUTED}
+                    style={styles.reportInput}
+                  />
+                  <TouchableOpacity
+                    activeOpacity={0.82}
+                    style={styles.attachBox}
+                    onPress={() =>
+                      setAttachedFiles(current => [
+                        ...current,
+                        `Attachment ${current.length + 1}`,
+                      ])
+                    }
+                  >
+                    <Text style={styles.attachIcon}>{ICONS.attach}</Text>
+                    <View style={styles.attachCopy}>
+                      <Text style={styles.attachTitle}>Attach files</Text>
+                      <Text style={styles.attachText}>
+                        Tap to add screenshots or documents.
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                  {attachedFiles.map(file => (
+                    <View key={file} style={styles.attachmentPill}>
+                      <Text style={styles.attachmentText}>{file}</Text>
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        style={styles.removeAttachmentButton}
+                        onPress={() =>
+                          setAttachedFiles(current =>
+                            current.filter(item => item !== file),
+                          )
+                        }
+                      >
+                        <Text style={styles.removeAttachmentText}>x</Text>
+                      </TouchableOpacity>
                     </View>
                   ))}
                 </View>
+              ) : activeDetail?.type === 'submitted' ? (
+                <Text style={styles.detailBody}>
+                  Your report has been submitted. Our support team will review it.
+                </Text>
               ) : (
                 <Text style={styles.detailBody}>{activeDetail?.body}</Text>
               )}
@@ -520,9 +562,33 @@ const ProfileScreen = ({ navigation }: Props) => {
             <TouchableOpacity
               activeOpacity={0.8}
               style={styles.detailButton}
-              onPress={() => setActiveDetail(null)}
+              onPress={() => {
+                if (activeDetail?.type === 'faqs' && activeFaqCategory) {
+                  setActiveFaqCategory(null);
+                  return;
+                }
+
+                if (activeDetail?.type === 'report') {
+                  setActiveDetail({
+                    title: 'Report Submitted',
+                    body: '',
+                    type: 'submitted',
+                  });
+                  setReportMessage('');
+                  setAttachedFiles([]);
+                  return;
+                }
+
+                setActiveDetail(null);
+              }}
             >
-              <Text style={styles.detailButtonText}>Got it</Text>
+              <Text style={styles.detailButtonText}>
+                {activeDetail?.type === 'faqs' && activeFaqCategory
+                  ? 'Back to Categories'
+                  : activeDetail?.type === 'report'
+                    ? 'Submit'
+                  : 'Got it'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -726,7 +792,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '900',
-    marginLeft: 8,
   },
   faqCard: {
     borderRadius: 12,
@@ -794,6 +859,93 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: '600',
     marginTop: 6,
+  },
+  reportForm: {
+    gap: 12,
+  },
+  reportHint: {
+    color: DARK,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '700',
+  },
+  reportInput: {
+    minHeight: 122,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F3E5B7',
+    backgroundColor: PALE_BACKGROUND,
+    color: DARK,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '600',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  attachBox: {
+    minHeight: 66,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: RED,
+    backgroundColor: SOFT_YELLOW,
+    paddingHorizontal: 12,
+  },
+  attachIcon: {
+    width: 32,
+    color: RED,
+    fontSize: 24,
+    fontWeight: '900',
+    textAlign: 'center',
+    marginRight: 10,
+  },
+  attachCopy: {
+    flex: 1,
+  },
+  attachTitle: {
+    color: DARK,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  attachText: {
+    color: MUTED,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '600',
+    marginTop: 3,
+  },
+  attachmentPill: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: BORDER,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  attachmentText: {
+    color: RED,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  removeAttachmentButton: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: RED,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  removeAttachmentText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    lineHeight: 14,
+    fontWeight: '900',
   },
   detailButton: {
     height: 46,

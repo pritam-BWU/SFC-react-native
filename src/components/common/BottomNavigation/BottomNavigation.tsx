@@ -3,7 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { RootStackParamList } from '../../../navigation/types';
 
-export const BOTTOM_NAV_HEIGHT = 78;
+export const BOTTOM_NAV_HEIGHT = 66;
 
 type MainTabRoute = 'Home' | 'Categories' | 'Subscription' | 'Notifications' | 'Profile';
 
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#EFEFEF',
     backgroundColor: '#FFFFFF',
-    paddingBottom: 8,
+    paddingBottom: 4,
     elevation: 14,
     shadowColor: '#000000',
     shadowOpacity: 0.08,
@@ -112,19 +112,19 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -3 },
   },
   tab: {
-    width: 68,
+    width: 62,
     alignItems: 'center',
-    paddingTop: 8,
+    paddingTop: 5,
   },
   featuredTab: {
-    width: 86,
+    width: 74,
     alignItems: 'center',
-    marginTop: -28,
+    marginTop: -20,
   },
   featuredCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: RED,
     alignItems: 'center',
     justifyContent: 'center',
@@ -137,25 +137,25 @@ const styles = StyleSheet.create({
   },
   label: {
     color: MUTED,
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
-    marginTop: 4,
+    marginTop: 2,
   },
   icon: {
     color: MUTED,
-    fontSize: 24,
+    fontSize: 21,
     fontWeight: '900',
-    lineHeight: 26,
+    lineHeight: 23,
   },
   featuredIcon: {
     color: '#FFFFFF',
-    fontSize: 29,
+    fontSize: 25,
     fontWeight: '900',
-    lineHeight: 32,
+    lineHeight: 28,
   },
   featuredLabel: {
     color: RED,
-    fontSize: 9.5,
+    fontSize: 8.5,
     fontWeight: '900',
     marginTop: 0,
   },

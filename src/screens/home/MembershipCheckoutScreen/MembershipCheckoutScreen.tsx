@@ -85,21 +85,24 @@ const MembershipCheckoutScreen = ({ navigation, route }: Props) => {
         <View style={styles.secureNotice}>
           <Text style={styles.secureIcon}>{ICONS.shield}</Text>
           <Text style={styles.headerSub}>
-            {ICONS.lock} Safe - Secure - No Auto-Renewal
+            {ICONS.lock}{' '}
+            {membershipType === 'durable'
+              ? 'Safe & Secure - No-Renewal'
+              : 'Safe - Secure - No Auto-Renewal'}
           </Text>
           <Text style={styles.secureText}>100% Secure</Text>
         </View>
 
         <View style={styles.selectedCard}>
           <Text style={styles.selectedLabel}>You selected</Text>
+          <Text style={styles.categoryTag}>{membership.shortTitle}</Text>
           <View style={styles.planIconBox}>
             <Text style={styles.planHeroIcon}>{plan.icon}</Text>
           </View>
           <View style={styles.planCopy}>
             <Text style={styles.planTitle}>{plan.name} Plan</Text>
             <Text style={styles.planDesc}>
-              {plan.monthlyConsumptionKg} kg monthly /{' '}
-              {plan.yearlyConsumptionKg} kg yearly consumption
+              Member benefits on selected products.
             </Text>
             <View style={styles.planMetaRow}>
               <View style={styles.metaItem}>
@@ -114,7 +117,7 @@ const MembershipCheckoutScreen = ({ navigation, route }: Props) => {
                 <Text style={styles.metaIcon}>{ICONS.shield}</Text>
                 <View>
                   <Text style={styles.metaTitle}>{plan.eligibility}</Text>
-                  <Text style={styles.metaSub}>Member Benefit</Text>
+                  <Text style={styles.metaSub}>Member benefits on selected products.</Text>
                 </View>
               </View>
             </View>
@@ -183,21 +186,37 @@ const MembershipCheckoutScreen = ({ navigation, route }: Props) => {
           </View>
         </View>
 
+        <View style={styles.disclaimerCard}>
+          <Text style={styles.disclaimerTitle}>Membership Disclaimer:</Text>
+          <Text style={styles.disclaimerText}>
+            Membership plans provide access to selected member-oriented platform
+            benefits and future service conveniences. Membership does not
+            guarantee fixed savings, financial returns, product availability, or
+            uninterrupted future services. Benefits may vary depending on
+            operational regions, product categories, availability, and future
+            platform updates.
+          </Text>
+        </View>
+
         <View style={styles.promiseRow}>
           <View style={styles.promiseCard}>
             <Text style={styles.promiseIcon}>{ICONS.shield}</Text>
             <View style={styles.promiseTextWrap}>
-              <Text style={styles.promiseTitle}>No Auto-Renewal</Text>
+              <Text style={styles.promiseTitle}>
+                {membershipType === 'durable' ? 'No-Renewal' : 'No Auto-Renewal'}
+              </Text>
               <Text style={styles.promiseText}>
-                Renew only when you choose.
+                {membershipType === 'durable'
+                  ? 'Pay one time and enjoy extended benefits.'
+                  : 'Renew at your wish after the validity expires.'}
               </Text>
             </View>
           </View>
           <View style={styles.promiseCard}>
             <Text style={styles.promiseIcon}>{ICONS.check}</Text>
             <View style={styles.promiseTextWrap}>
-              <Text style={styles.promiseTitle}>Cancel Anytime</Text>
-              <Text style={styles.promiseText}>Cancel or upgrade anytime.</Text>
+              <Text style={styles.promiseTitle}>Upgrade Anytime</Text>
+              <Text style={styles.promiseText}>Upgrade your plan anytime.</Text>
             </View>
           </View>
         </View>
@@ -308,6 +327,20 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
   },
+  categoryTag: {
+    position: 'absolute',
+    left: 118,
+    top: 0,
+    backgroundColor: '#2EAAC4',
+    color: '#FFFFFF',
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+    overflow: 'hidden',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    fontSize: 10,
+    fontWeight: '900',
+  },
   planIconBox: {
     width: 86,
     height: 86,
@@ -327,7 +360,7 @@ const styles = StyleSheet.create({
   },
   planCopy: {
     flex: 1,
-    paddingTop: 38,
+    paddingTop: 42,
   },
   planTitle: {
     color: DARK,
@@ -456,6 +489,26 @@ const styles = StyleSheet.create({
     backgroundColor: SOFT_YELLOW,
     padding: 16,
     marginTop: 12,
+  },
+  disclaimerCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: PALE_YELLOW,
+    padding: 14,
+    marginTop: 12,
+  },
+  disclaimerTitle: {
+    color: RED,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  disclaimerText: {
+    color: DARK,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '600',
+    marginTop: 6,
   },
   summaryLine: {
     flexDirection: 'row',

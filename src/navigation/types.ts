@@ -2,11 +2,18 @@ export type RootStackParamList = {
   Login: undefined;
   SignUp: undefined;
   Home: undefined;
-  Categories: undefined;
+  Categories:
+    | {
+        categoryId?: string;
+      }
+    | undefined;
   Notifications: undefined;
   Profile: undefined;
   ProductDetail: {
     productId: string;
+  };
+  QualitySource: {
+    categoryId: string;
   };
   SearchResults: {
     query: string;

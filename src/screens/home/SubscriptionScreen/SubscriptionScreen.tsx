@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dimensions,
+  Modal,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -20,6 +21,9 @@ import {
   getMemberBenefitsPreview,
   memberBenefitsTitle,
 } from '../../../data/memberBenefits';
+import membershipPolicy from '../../../../membership_policy.json';
+import refundPolicy from '../../../../refund_and_cancellation.json';
+import termsPolicy from '../../../../terms_conditions.json';
 import { RootStackParamList } from '../../../navigation/types';
 
 const { width } = Dimensions.get('window');
@@ -46,6 +50,10 @@ const ICONS = {
 };
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Subscription'>;
+type PolicyDocument = {
+  title?: string;
+  paragraphs?: string[];
+};
 
 const howItWorks = [
   {
@@ -119,6 +127,8 @@ const MembershipCard = ({
 };
 
 const SubscriptionScreen = ({ navigation }: Props) => {
+  const [activePolicy, setActivePolicy] = useState<PolicyDocument | null>(null);
+
   const openPlans = (membershipType: MembershipTypeId) => {
     navigation.navigate('MembershipPlanList', { membershipType });
   };
@@ -151,10 +161,21 @@ const SubscriptionScreen = ({ navigation }: Props) => {
 
         <View style={styles.termsCard}>
           <Text style={styles.termsIcon}>{ICONS.shield}</Text>
-          <Text style={styles.termsText}>
-            All memberships are subject to our Terms, Membership Policy and
-            Refund Policy.
-          </Text>
+          <View style={styles.termsTextWrap}>
+            <Text style={styles.termsText}>All memberships are subject to </Text>
+            <TouchableOpacity onPress={() => setActivePolicy(termsPolicy)}>
+              <Text style={styles.termsLink}>Terms</Text>
+            </TouchableOpacity>
+            <Text style={styles.termsText}>, </Text>
+            <TouchableOpacity onPress={() => setActivePolicy(membershipPolicy)}>
+              <Text style={styles.termsLink}>Membership Policy</Text>
+            </TouchableOpacity>
+            <Text style={styles.termsText}>, & </Text>
+            <TouchableOpacity onPress={() => setActivePolicy(refundPolicy)}>
+              <Text style={styles.termsLink}>Refund Policy</Text>
+            </TouchableOpacity>
+            <Text style={styles.termsText}>.</Text>
+          </View>
         </View>
 
         <Text style={styles.worksHeading}>How Membership Works</Text>
@@ -178,6 +199,36 @@ const SubscriptionScreen = ({ navigation }: Props) => {
           ))}
         </View>
 
+        <Text style={styles.compareHeading}>Compare at a glance</Text>
+        <View style={styles.compareGrid}>
+          <View style={styles.compareColumn}>
+            <Text style={[styles.compareHeader, styles.flexibleHeader]}>
+              Flexible (Refundable)
+            </Text>
+            <Text style={styles.compareCell}>5 Years</Text>
+            <Text style={styles.compareCell}>Refundable as per policy</Text>
+            <Text style={[styles.compareStrong, styles.flexibleText]}>
+              Generally 10% - 30%*
+            </Text>
+            <Text style={styles.compareSub}>on selected products</Text>
+            <Text style={styles.compareCell}>Standard Support</Text>
+            <Text style={styles.compareCell}>Users who prefer flexibility</Text>
+          </View>
+          <View style={styles.compareColumn}>
+            <Text style={[styles.compareHeader, styles.durableHeader]}>
+              Long-Duration (Non-Refundable)
+            </Text>
+            <Text style={styles.compareCell}>Lifetime / Extended</Text>
+            <Text style={styles.compareCell}>Non-Refundable</Text>
+            <Text style={[styles.compareStrong, styles.durableText]}>
+              Generally 20% - 40%*
+            </Text>
+            <Text style={styles.compareSub}>on selected products</Text>
+            <Text style={styles.compareCell}>Priority Support</Text>
+            <Text style={styles.compareCell}>Users who want maximum benefits</Text>
+          </View>
+        </View>
+
         <View style={styles.bottomNote}>
           <Text style={styles.bottomNoteText}>
             {ICONS.check} Membership benefits are applicable as per the terms
@@ -185,6 +236,31 @@ const SubscriptionScreen = ({ navigation }: Props) => {
           </Text>
         </View>
       </ScrollView>
+      <Modal
+        visible={Boolean(activePolicy)}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setActivePolicy(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.policyCard}>
+            <Text style={styles.policyTitle}>{activePolicy?.title || 'Policy'}</Text>
+            <ScrollView style={styles.policyScroll}>
+              <Text style={styles.policyBody}>
+                {activePolicy?.paragraphs?.join('\n\n') ||
+                  'Please review this policy from the app profile policy section.'}
+              </Text>
+            </ScrollView>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={styles.policyButton}
+              onPress={() => setActivePolicy(null)}
+            >
+              <Text style={styles.policyButtonText}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -350,11 +426,23 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   termsText: {
-    flex: 1,
     color: DARK,
     fontSize: 11,
     lineHeight: 15,
     fontWeight: '700',
+  },
+  termsTextWrap: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  },
+  termsLink: {
+    color: RED,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '900',
+    textDecorationLine: 'underline',
   },
   worksHeading: {
     color: DARK,
@@ -392,6 +480,82 @@ const styles = StyleSheet.create({
   },
   worksList: {
     gap: 12,
+  },
+  compareHeading: {
+    color: DARK,
+    fontSize: 18,
+    fontWeight: '900',
+    textAlign: 'center',
+    marginTop: 22,
+    marginBottom: 12,
+  },
+  compareGrid: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  compareColumn: {
+    flex: 1,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+  },
+  compareHeader: {
+    minHeight: 48,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '900',
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+  },
+  flexibleHeader: {
+    color: '#158A2B',
+    backgroundColor: '#F3FBF0',
+  },
+  durableHeader: {
+    color: '#5B35C7',
+    backgroundColor: '#F6F1FF',
+  },
+  compareCell: {
+    minHeight: 44,
+    color: DARK,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '700',
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    borderTopWidth: 1,
+    borderTopColor: BORDER,
+    paddingHorizontal: 8,
+    paddingVertical: 9,
+  },
+  compareStrong: {
+    minHeight: 32,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '900',
+    textAlign: 'center',
+    borderTopWidth: 1,
+    borderTopColor: BORDER,
+    paddingHorizontal: 8,
+    paddingTop: 9,
+  },
+  flexibleText: {
+    color: '#158A2B',
+  },
+  durableText: {
+    color: '#5B35C7',
+  },
+  compareSub: {
+    color: MUTED,
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+    paddingBottom: 9,
   },
   workCard: {
     minHeight: 82,
@@ -447,6 +611,50 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '800',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.48)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 18,
+  },
+  policyCard: {
+    width: '100%',
+    maxHeight: '78%',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: '#FFFFFF',
+    padding: 18,
+  },
+  policyTitle: {
+    color: DARK,
+    fontSize: 19,
+    fontWeight: '900',
+    marginBottom: 10,
+  },
+  policyScroll: {
+    maxHeight: 360,
+  },
+  policyBody: {
+    color: '#333333',
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: '600',
+  },
+  policyButton: {
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: RED,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  policyButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '900',
   },
 });
 

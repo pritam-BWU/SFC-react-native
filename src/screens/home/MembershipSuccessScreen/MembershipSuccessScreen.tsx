@@ -152,12 +152,21 @@ const MembershipSuccessScreen = ({ navigation, route }: Props) => {
                 </Text>
               </View>
               <View style={styles.cardDivider} />
-              <View style={styles.cardDateCol}>
+              <View>
                 <Text style={styles.cardLabel} numberOfLines={1}>
-                  Member Since
+                  Member Category
                 </Text>
                 <Text style={styles.cardValue} numberOfLines={1}>
-                  25 May 2025
+                  {plan.name}
+                </Text>
+              </View>
+              <View style={styles.cardDivider} />
+              <View style={styles.cardDateCol}>
+                <Text style={styles.cardLabel} numberOfLines={1}>
+                  Member Type
+                </Text>
+                <Text style={styles.cardValue} numberOfLines={1}>
+                  {membership.shortTitle}
                 </Text>
               </View>
             </View>
@@ -177,12 +186,14 @@ const MembershipSuccessScreen = ({ navigation, route }: Props) => {
               and all member benefits are unlocked.
             </Text>
           </View>
-          <View style={styles.billingBox}>
-            <Text style={styles.billingLabel} numberOfLines={1}>
-              Next Billing Date
-            </Text>
-            <Text style={styles.billingDate}>{ICONS.calendar} 25 May 2026</Text>
-          </View>
+          {membershipType === 'flexible' && (
+            <View style={styles.billingBox}>
+              <Text style={styles.billingLabel} numberOfLines={1}>
+                Next Renewal
+              </Text>
+              <Text style={styles.billingDate}>{ICONS.calendar} 25 May 2026</Text>
+            </View>
+          )}
         </View>
 
         <Text style={styles.sectionTitle}>What's Next?</Text>

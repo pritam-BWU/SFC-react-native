@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   Dimensions,
   Image,
-  ImageSourcePropType,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -12,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import FoodClubHeader from '../../../components/common/FoodClubHeader/FoodClubHeader';
@@ -30,7 +32,7 @@ const MUTED = '#5B5B5B';
 const PAGE_YELLOW = '#FFF0AD';
 const SOFT_YELLOW = '#FFF7D6';
 const BORDER = '#F1DFA0';
-const PRODUCT_WIDTH = Math.min(160, width * 0.42);
+const PRODUCT_WIDTH = Math.min(142, width * 0.37);
 
 const ICONS = {
   shield: '\u{1F6E1}\uFE0F',
@@ -68,51 +70,77 @@ const whyItems: WhyItem[] = [
   { id: 'delivery', title: 'On-Time', sub: 'Fast delivery', icon: ICONS.truck },
 ];
 
-const SectionHeader = ({ title }: { title: string }) => (
+const SectionHeader = ({
+  title,
+  onViewAll,
+}: {
+  title: string;
+  onViewAll?: () => void;
+}) => (
   <View style={styles.sectionHeader}>
     <Text style={styles.sectionTitle}>{title}</Text>
-    <TouchableOpacity activeOpacity={0.75} style={styles.viewAllRow}>
+    <TouchableOpacity
+      activeOpacity={0.75}
+      style={styles.viewAllRow}
+      onPress={onViewAll}
+    >
       <Text style={styles.viewAllText}>View All</Text>
       <Text style={styles.viewAllIcon}>{ICONS.right}</Text>
     </TouchableOpacity>
   </View>
 );
 
-const getDiscount = (index: number) => ['20% OFF', '15% OFF', '10% OFF'][index % 3];
-
-const getBannerDescription = (product: DatasetProduct) => {
-  const firstSentence = product.overview.split('.')[0];
-
-  return firstSentence
-    ? `${firstSentence}.`
-    : 'Fresh food choices prepared for everyday meals.';
-};
+const getDiscount = (index: number) =>
+  [`Up to 20% off`, `Up to 30% off`, `Up to 40% off`][index % 3];
 
 const HomeScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList, 'Home'>>();
   const [bannerIndex, setBannerIndex] = useState(0);
   const [wishlist, setWishlist] = useState<string[]>([]);
+  const bannerRef = useRef<ScrollView>(null);
 
   const bannerSlides = useMemo(
     () =>
-      productCategories
-        .flatMap(category => category.products.slice(0, 1))
-        .map(product => ({
-          product,
-          eyebrow: product.category.replace('Organic Country ', ''),
-          title: product.name,
-          subtitle: product.highlightTitles[0] || 'Fresh Food Selection',
-          description: getBannerDescription(product),
-        })),
+      [
+        {
+          id: 'fresh',
+          eyebrow: 'Fresh Selection',
+          title: 'Everyday Fresh Picks',
+          subtitle: 'Quality food, simple choices',
+          description:
+            'Browse chicken, paneer, soya and ready-to-cook favorites prepared for your daily meals.',
+          image: productCategories[0]?.products[0]?.image,
+        },
+        {
+          id: 'member',
+          eyebrow: 'Foodclub Member',
+          title: 'Better Access Ahead',
+          subtitle: 'Exclusive member-oriented benefits',
+          description:
+            'Become ready for selected pricing benefits and priority access when ordering starts.',
+          image: productCategories[1]?.products[0]?.image,
+        },
+        {
+          id: 'quality',
+          eyebrow: 'Reliable Source',
+          title: 'Freshness You Can Trust',
+          subtitle: 'Hygiene-focused sourcing',
+          description:
+            'Explore carefully sourced products from reliable farms and clean handling processes.',
+          image: productCategories[2]?.products[0]?.image,
+        },
+      ],
     [],
   );
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setBannerIndex(current =>
-        bannerSlides.length ? (current + 1) % bannerSlides.length : 0,
-      );
+      setBannerIndex(current => {
+        const next = bannerSlides.length ? (current + 1) % bannerSlides.length : 0;
+        bannerRef.current?.scrollTo({ x: next * (width - 36), animated: true });
+        return next;
+      });
     }, 2500);
 
     return () => clearInterval(timer);
@@ -132,6 +160,15 @@ const HomeScreen = () => {
 
   const openSearchResults = (query: string) => {
     navigation.navigate('SearchResults', { query });
+  };
+
+  const openCategory = (categoryId?: string) => {
+    navigation.navigate('Categories', categoryId ? { categoryId } : undefined);
+  };
+
+  const handleBannerScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / (width - 36));
+    setBannerIndex(nextIndex);
   };
 
   const renderProductCard = (product: DatasetProduct, index: number) => (
@@ -172,9 +209,6 @@ const HomeScreen = () => {
         <Text style={styles.productName} numberOfLines={2}>
           {product.name}
         </Text>
-        <Text style={styles.productCategory} numberOfLines={1}>
-          {product.category}
-        </Text>
         <Text style={styles.productPrice} numberOfLines={1}>
           {product.priceStartingFrom}
         </Text>
@@ -186,9 +220,10 @@ const HomeScreen = () => {
     title: string,
     products: DatasetProduct[],
     key: string,
+    categoryId?: string,
   ) => (
     <View key={key} style={styles.productSection}>
-      <SectionHeader title={title} />
+      <SectionHeader title={title} onViewAll={() => openCategory(categoryId)} />
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -198,11 +233,6 @@ const HomeScreen = () => {
       </ScrollView>
     </View>
   );
-
-  const activeBannerSlide = bannerSlides[bannerIndex];
-  const activeBannerProduct =
-    activeBannerSlide?.product || allDatasetProducts[0];
-  const heroImage: ImageSourcePropType | undefined = activeBannerProduct?.image;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -218,32 +248,40 @@ const HomeScreen = () => {
         </View>
 
         <View style={styles.heroCard}>
-          <View style={styles.heroCopy}>
-            <Text style={styles.heroEyebrow} numberOfLines={1}>
-              {activeBannerSlide?.eyebrow || activeBannerProduct?.category}
-            </Text>
-            <Text style={styles.heroTitle} numberOfLines={2}>
-              {activeBannerSlide?.title || 'Premium Quality'}
-            </Text>
-            <Text style={styles.heroTitleRed} numberOfLines={1}>
-              {activeBannerSlide?.subtitle || 'Farm Fresh'}
-            </Text>
-            <Text style={styles.heroText}>
-              {activeBannerSlide?.description ||
-                'Fresh chicken, soya, paneer and ready-to-cook favorites delivered with care.'}
-            </Text>
-            <TouchableOpacity
-              activeOpacity={0.85}
-              style={styles.heroButton}
-              onPress={() => activeBannerProduct && openDetail(activeBannerProduct.id)}
-            >
-              <Text style={styles.heroButtonText}>Explore Now</Text>
-              <Text style={styles.heroButtonArrow}>{ICONS.right}</Text>
-            </TouchableOpacity>
-          </View>
-          {heroImage && (
-            <Image source={heroImage} style={styles.heroImage} resizeMode="cover" />
-          )}
+          <ScrollView
+            ref={bannerRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={handleBannerScroll}
+          >
+            {bannerSlides.map(slide => (
+              <View key={slide.id} style={styles.heroSlide}>
+                <View style={styles.heroCopy}>
+                  <Text style={styles.heroTitle} numberOfLines={2}>
+                    {slide.title}
+                  </Text>
+                  <Text style={styles.heroTitleRed} numberOfLines={1}>
+                    {slide.subtitle}
+                  </Text>
+                  <Text style={styles.heroText} numberOfLines={3}>
+                    {slide.description}
+                  </Text>
+                </View>
+                {slide.image && (
+                  <Image source={slide.image} style={styles.heroImage} resizeMode="cover" />
+                )}
+              </View>
+            ))}
+          </ScrollView>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.heroButton}
+            onPress={() => openCategory()}
+          >
+            <Text style={styles.heroButtonText}>Explore Products</Text>
+            <Text style={styles.heroButtonArrow}>{ICONS.right}</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.dotsRow}>
@@ -257,7 +295,7 @@ const HomeScreen = () => {
           ))}
         </View>
 
-        <SectionHeader title="Shop By Category" />
+        <SectionHeader title="Shop By Category" onViewAll={() => openCategory()} />
         <View style={styles.categoriesPanel}>
           {productCategories.map(category => {
             const firstProduct = category.products[0];
@@ -266,7 +304,7 @@ const HomeScreen = () => {
               <TouchableOpacity
                 key={category.id}
                 activeOpacity={0.85}
-                onPress={() => firstProduct && openDetail(firstProduct.id)}
+                onPress={() => openCategory(category.id)}
                 style={styles.categoryItem}
               >
                 <View style={styles.categoryIconCircle}>
@@ -302,8 +340,34 @@ const HomeScreen = () => {
         </View>
 
         {renderProductSection('Top Picks for You', allDatasetProducts.slice(0, 5), 'top')}
+        <View style={styles.foodclubCard}>
+          <View style={styles.foodclubIconCircle}>
+            <Icon name="crown-outline" color={RED} size={30} />
+          </View>
+          <View style={styles.foodclubCopy}>
+            <Text style={styles.foodclubTitle}>
+              Join Superfowl Foodclub Membership
+            </Text>
+            <Text style={styles.foodclubText}>
+              Become our foodclub member and enjoy exclusive pricing and priority
+              access when ordering starts.
+            </Text>
+          </View>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.foodclubButton}
+            onPress={() => navigation.navigate('Subscription')}
+          >
+            <Text style={styles.foodclubButtonText}>View Plans</Text>
+          </TouchableOpacity>
+        </View>
         {productCategories.map(category =>
-          renderProductSection(category.name, category.products, category.id),
+          renderProductSection(
+            category.name,
+            category.products,
+            category.id,
+            category.id,
+          ),
         )}
       </ScrollView>
     </SafeAreaView>
@@ -328,7 +392,8 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   heroCard: {
-    minHeight: 162,
+    minHeight: 176,
+    height: 206,
     marginHorizontal: 18,
     marginTop: 16,
     borderRadius: 16,
@@ -336,12 +401,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: BORDER,
     overflow: 'hidden',
+  },
+  heroSlide: {
+    width: width - 36,
     flexDirection: 'row',
   },
   heroCopy: {
     flex: 1,
     padding: 16,
     paddingRight: 8,
+    paddingBottom: 70,
     justifyContent: 'center',
   },
   heroEyebrow: {
@@ -375,16 +444,18 @@ const styles = StyleSheet.create({
     color: '#333333',
     fontSize: 11.5,
     lineHeight: 16,
-    marginBottom: 12,
+    marginTop: 8,
   },
   heroButton: {
-    alignSelf: 'flex-start',
+    position: 'absolute',
+    left: 16,
+    bottom: 14,
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 24,
     backgroundColor: RED,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 9,
   },
   heroButtonText: {
     color: '#FFFFFF',
@@ -540,24 +611,24 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   productSection: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   productsRail: {
-    gap: 12,
+    gap: 10,
     paddingHorizontal: 18,
     paddingBottom: 2,
   },
   productCard: {
     width: PRODUCT_WIDTH,
-    minHeight: 216,
-    borderRadius: 12,
+    minHeight: 176,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: BORDER,
     backgroundColor: '#FFFFFF',
     overflow: 'hidden',
   },
   productImageWrap: {
-    height: 118,
+    height: 92,
     position: 'relative',
     backgroundColor: '#FFFDF3',
   },
@@ -571,42 +642,42 @@ const styles = StyleSheet.create({
     left: 8,
     borderRadius: 12,
     backgroundColor: RED,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
   },
   discountText: {
     color: '#FFFFFF',
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: '900',
   },
   heartButton: {
     position: 'absolute',
     top: 8,
     right: 8,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.96)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   heartIcon: {
     color: DARK,
-    fontSize: 17,
-    lineHeight: 18,
+    fontSize: 15,
+    lineHeight: 16,
   },
   heartActive: {
     color: RED,
   },
   productBody: {
-    padding: 10,
+    padding: 8,
   },
   productName: {
     color: DARK,
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 11.5,
+    lineHeight: 15,
     fontWeight: '900',
-    minHeight: 34,
+    minHeight: 30,
   },
   productCategory: {
     color: MUTED,
@@ -616,9 +687,59 @@ const styles = StyleSheet.create({
   },
   productPrice: {
     color: RED,
+    fontSize: 11,
+    fontWeight: '900',
+    marginTop: 6,
+  },
+  foodclubCard: {
+    minHeight: 108,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 18,
+    marginBottom: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: SOFT_YELLOW,
+    padding: 14,
+    gap: 12,
+  },
+  foodclubCopy: {
+    flex: 1,
+  },
+  foodclubIconCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: BORDER,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  foodclubTitle: {
+    color: DARK,
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '900',
+  },
+  foodclubText: {
+    color: '#333333',
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '600',
+    marginTop: 6,
+  },
+  foodclubButton: {
+    borderRadius: 9,
+    backgroundColor: RED,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+  },
+  foodclubButtonText: {
+    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '900',
-    marginTop: 8,
   },
 });
 
