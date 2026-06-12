@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
+  Animated,
   Dimensions,
   Image,
   NativeScrollEvent,
@@ -14,6 +15,7 @@ import {
   View,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { BadgeCheck, Dumbbell, ShieldCheck, Truck } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import FoodClubHeader from '../../../components/common/FoodClubHeader/FoodClubHeader';
@@ -33,41 +35,39 @@ const PAGE_YELLOW = '#FFF0AD';
 const SOFT_YELLOW = '#FFF7D6';
 const BORDER = '#F1DFA0';
 const PRODUCT_WIDTH = Math.min(142, width * 0.37);
+const HERO_WIDTH = width - 36;
 
 const ICONS = {
-  shield: '\u{1F6E1}\uFE0F',
-  leaf: '\u{1F331}',
-  truck: '\u{1F69A}',
-  check: '\u2713',
   heart: '\u2764\uFE0F',
   heartEmpty: '\u2661',
   right: '\u203A',
 };
 
 type ProductDetailId = RootStackParamList['ProductDetail']['productId'];
+type IconComponent = typeof BadgeCheck;
 
 type WhyItem = {
   id: string;
   title: string;
   sub: string;
-  icon: string;
+  icon: IconComponent;
 };
 
 const whyItems: WhyItem[] = [
-  { id: 'fresh', title: '100% Fresh', sub: 'Daily checked', icon: ICONS.check },
+  { id: 'fresh', title: '100% Fresh', sub: 'Daily checked', icon: BadgeCheck },
   {
     id: 'nutrition',
     title: 'High Protein',
     sub: 'Smart nutrition',
-    icon: ICONS.leaf,
+    icon: Dumbbell,
   },
   {
     id: 'quality',
     title: 'Quality Assured',
     sub: 'Hygienic process',
-    icon: ICONS.shield,
+    icon: ShieldCheck,
   },
-  { id: 'delivery', title: 'On-Time', sub: 'Fast delivery', icon: ICONS.truck },
+  { id: 'delivery', title: 'On-Time', sub: 'Fast delivery', icon: Truck },
 ];
 
 const SectionHeader = ({
@@ -99,6 +99,7 @@ const HomeScreen = () => {
   const [bannerIndex, setBannerIndex] = useState(0);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const bannerRef = useRef<ScrollView>(null);
+  const heroScrollX = useRef(new Animated.Value(0)).current;
 
   const bannerSlides = useMemo(
     () =>
@@ -134,14 +135,19 @@ const HomeScreen = () => {
     [],
   );
 
+  const goToBanner = (index: number) => {
+    bannerRef.current?.scrollTo({ x: index * HERO_WIDTH, animated: true });
+    setBannerIndex(index);
+  };
+
   useEffect(() => {
     const timer = setInterval(() => {
       setBannerIndex(current => {
         const next = bannerSlides.length ? (current + 1) % bannerSlides.length : 0;
-        bannerRef.current?.scrollTo({ x: next * (width - 36), animated: true });
+        bannerRef.current?.scrollTo({ x: next * HERO_WIDTH, animated: true });
         return next;
       });
-    }, 2500);
+    }, 3800);
 
     return () => clearInterval(timer);
   }, [bannerSlides.length]);
@@ -167,7 +173,7 @@ const HomeScreen = () => {
   };
 
   const handleBannerScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / (width - 36));
+    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / HERO_WIDTH);
     setBannerIndex(nextIndex);
   };
 
@@ -237,51 +243,92 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor={PAGE_YELLOW} barStyle="dark-content" />
+      <View style={styles.fixedTopArea}>
+        <FoodClubHeader showSearch onSearch={openSearchResults} />
+      </View>
 
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.topArea}>
-          <FoodClubHeader showSearch onSearch={openSearchResults} />
-        </View>
-
         <View style={styles.heroCard}>
-          <ScrollView
+          <Animated.ScrollView
             ref={bannerRef}
             horizontal
             pagingEnabled
+            decelerationRate="fast"
+            bounces={false}
             showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { x: heroScrollX } } }],
+              { useNativeDriver: true },
+            )}
             onMomentumScrollEnd={handleBannerScroll}
           >
-            {bannerSlides.map(slide => (
-              <View key={slide.id} style={styles.heroSlide}>
-                <View style={styles.heroCopy}>
-                  <Text style={styles.heroTitle} numberOfLines={2}>
-                    {slide.title}
-                  </Text>
-                  <Text style={styles.heroTitleRed} numberOfLines={1}>
-                    {slide.subtitle}
-                  </Text>
-                  <Text style={styles.heroText} numberOfLines={3}>
-                    {slide.description}
-                  </Text>
-                </View>
-                {slide.image && (
-                  <Image source={slide.image} style={styles.heroImage} resizeMode="cover" />
-                )}
-              </View>
-            ))}
-          </ScrollView>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={styles.heroButton}
-            onPress={() => openCategory()}
-          >
-            <Text style={styles.heroButtonText}>Explore Products</Text>
-            <Text style={styles.heroButtonArrow}>{ICONS.right}</Text>
-          </TouchableOpacity>
+            {bannerSlides.map((slide, index) => {
+              const inputRange = [
+                (index - 1) * HERO_WIDTH,
+                index * HERO_WIDTH,
+                (index + 1) * HERO_WIDTH,
+              ];
+              const slideScale = heroScrollX.interpolate({
+                inputRange,
+                outputRange: [0.94, 1, 0.94],
+                extrapolate: 'clamp',
+              });
+              const slideOpacity = heroScrollX.interpolate({
+                inputRange,
+                outputRange: [0.78, 1, 0.78],
+                extrapolate: 'clamp',
+              });
+
+              return (
+                <Animated.View
+                  key={slide.id}
+                  style={[
+                    styles.heroSlide,
+                    {
+                      opacity: slideOpacity,
+                      transform: [{ scale: slideScale }],
+                    },
+                  ]}
+                >
+                  <View style={styles.heroAccent} />
+                  <View style={styles.heroCopy}>
+                    <Text style={styles.heroEyebrow}>{slide.eyebrow}</Text>
+                    <Text style={styles.heroTitle} numberOfLines={2}>
+                      {slide.title}
+                    </Text>
+                    <Text style={styles.heroTitleRed} numberOfLines={1}>
+                      {slide.subtitle}
+                    </Text>
+                    <Text style={styles.heroText} numberOfLines={3}>
+                      {slide.description}
+                    </Text>
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      style={styles.heroButton}
+                      onPress={() => openCategory()}
+                    >
+                      <Text style={styles.heroButtonText}>Explore More</Text>
+                      <Text style={styles.heroButtonArrow}>{ICONS.right}</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {slide.image && (
+                    <View style={styles.heroImagePanel}>
+                      <Image
+                        source={slide.image}
+                        style={styles.heroImage}
+                        resizeMode="cover"
+                      />
+                    </View>
+                  )}
+                </Animated.View>
+              );
+            })}
+          </Animated.ScrollView>
         </View>
 
         <View style={styles.dotsRow}>
@@ -289,7 +336,7 @@ const HomeScreen = () => {
             <TouchableOpacity
               key={index}
               activeOpacity={0.8}
-              onPress={() => setBannerIndex(index)}
+              onPress={() => goToBanner(index)}
               style={[styles.dot, index === bannerIndex && styles.dotActive]}
             />
           ))}
@@ -327,15 +374,19 @@ const HomeScreen = () => {
         <View style={styles.whyPanel}>
           <Text style={styles.whyHeading}>Why Choose Superfowl Food Club?</Text>
           <View style={styles.whyRow}>
-            {whyItems.map(item => (
-              <View key={item.id} style={styles.whyItem}>
-                <View style={styles.whyIconCircle}>
-                  <Text style={styles.whyIcon}>{item.icon}</Text>
+            {whyItems.map(item => {
+              const WhyIcon = item.icon;
+
+              return (
+                <View key={item.id} style={styles.whyItem}>
+                  <View style={styles.whyIconCircle}>
+                    <WhyIcon size={22} color={RED} strokeWidth={2.3} />
+                  </View>
+                  <Text style={styles.whyTitle}>{item.title}</Text>
+                  <Text style={styles.whySub}>{item.sub}</Text>
                 </View>
-                <Text style={styles.whyTitle}>{item.title}</Text>
-                <Text style={styles.whySub}>{item.sub}</Text>
-              </View>
-            ))}
+              );
+            })}
           </View>
         </View>
 
@@ -387,30 +438,52 @@ const styles = StyleSheet.create({
     paddingBottom: 84,
     backgroundColor: '#FFFFFF',
   },
-  topArea: {
+  fixedTopArea: {
     backgroundColor: PAGE_YELLOW,
-    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F4DF8F',
+    elevation: 8,
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    zIndex: 10,
   },
   heroCard: {
-    minHeight: 176,
-    height: 206,
+    minHeight: 188,
+    height: 218,
     marginHorizontal: 18,
-    marginTop: 16,
-    borderRadius: 16,
-    backgroundColor: SOFT_YELLOW,
+    marginTop: 14,
+    borderRadius: 20,
+    backgroundColor: '#FFF8D9',
     borderWidth: 1,
     borderColor: BORDER,
     overflow: 'hidden',
+    elevation: 5,
+    shadowColor: RED,
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
   },
   heroSlide: {
-    width: width - 36,
+    width: HERO_WIDTH,
     flexDirection: 'row',
+    position: 'relative',
+  },
+  heroAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 6,
+    backgroundColor: RED,
   },
   heroCopy: {
     flex: 1,
-    padding: 16,
+    padding: 18,
+    paddingLeft: 20,
     paddingRight: 8,
-    paddingBottom: 70,
+    paddingBottom: 18,
     justifyContent: 'center',
   },
   heroEyebrow: {
@@ -424,54 +497,62 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    marginBottom: 7,
+    marginBottom: 8,
   },
   heroTitle: {
     color: DARK,
-    fontSize: 18,
-    lineHeight: 22,
+    fontSize: 19,
+    lineHeight: 24,
     fontWeight: '900',
   },
   heroTitleRed: {
     color: RED,
-    fontSize: 15,
-    lineHeight: 19,
+    fontSize: 14,
+    lineHeight: 18,
     fontWeight: '900',
-    marginTop: 2,
-    marginBottom: 8,
+    marginTop: 3,
   },
   heroText: {
     color: '#333333',
-    fontSize: 11.5,
+    fontSize: 11,
     lineHeight: 16,
+    fontWeight: '600',
     marginTop: 8,
   },
   heroButton: {
-    position: 'absolute',
-    left: 16,
-    bottom: 14,
+    alignSelf: 'flex-start',
+    minHeight: 36,
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 24,
     backgroundColor: RED,
-    paddingHorizontal: 16,
-    paddingVertical: 9,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginTop: 12,
   },
   heroButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: '900',
   },
   heroButtonArrow: {
     color: '#FFFFFF',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '900',
     marginLeft: 8,
     marginTop: -1,
   },
-  heroImage: {
+  heroImagePanel: {
     width: width * 0.38,
     height: '100%',
+    padding: 10,
+    paddingLeft: 0,
+  },
+  heroImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 16,
   },
   dotsRow: {
     flexDirection: 'row',
@@ -591,11 +672,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 7,
-  },
-  whyIcon: {
-    color: RED,
-    fontSize: 20,
-    fontWeight: '900',
   },
   whyTitle: {
     color: DARK,

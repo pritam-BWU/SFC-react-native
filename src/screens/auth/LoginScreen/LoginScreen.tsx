@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Image,
   ImageBackground,
+  Keyboard,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Text,
   TextInput,
@@ -13,9 +14,12 @@ import {
   ScrollView,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
  
 import { RootStackParamList } from '../../../navigation/types';
+import { loginUser } from '../../../api/auth.api';
+import PrivacyDisclaimerModal from '../components/PrivacyDisclaimerModal';
 import styles from './Login.styles';
  
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
@@ -23,47 +27,65 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 const backgroundImage = require('../../../images.png');
 const logoImage = require('../../../logo_image_clean.png');
 
-const ICONS = {
-  arrowRight: '\u2192',
-  check: '\u2713',
-  eye: '\u25C9',
-  eyeOff: '\u25CC',
-  lock: '\u25A1',
-  phone: '\u260E',
-};
- 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
+  const scrollRef = useRef<ScrollView>(null);
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
-  const [acceptedDisclaimer, setAcceptedDisclaimer] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const scrollToField = (y: number) => {
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({ y, animated: true });
+    }, 120);
+  };
+
+  useEffect(() => {
+    const keyboardHideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+    });
+
+    return () => keyboardHideSubscription.remove();
+  }, []);
  
-  const handleContinue = () => {
-    if (!loginId.trim() || password.trim().length < 4) {
+  const handleContinue = async () => {
+    if (!loginId.trim() || !password.trim()) {
       Alert.alert(
         'Missing details',
-        'Please enter your email or phone and password.',
+        'Please enter your email or phone number and password.',
       );
       return;
     }
  
-    setAcceptedDisclaimer(false);
-    setShowDisclaimer(true);
+    try {
+      setLoading(true);
+      await loginUser({
+        login_id: loginId,
+        password,
+      });
+      setShowDisclaimer(true);
+    } catch (error) {
+      Alert.alert(
+        'Login failed',
+        error instanceof Error
+          ? error.message
+          : 'Please check your email/phone and password.',
+      );
+    } finally {
+      setLoading(false);
+    }
   };
  
   const handleAcceptDisclaimer = () => {
-    if (!acceptedDisclaimer) {
-      return;
-    }
- 
     setShowDisclaimer(false);
     navigation.replace('Home');
   };
  
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior="padding"
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
       style={styles.screen}
     >
       <ImageBackground
@@ -79,9 +101,14 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           {/* ─── CHANGE 1: English language pill removed ─── */}
  
           <ScrollView
+            ref={scrollRef}
             style={styles.formScroll}
             contentContainerStyle={styles.content}
+            automaticallyAdjustKeyboardInsets
+            contentInsetAdjustmentBehavior="always"
+            keyboardDismissMode="interactive"
             keyboardShouldPersistTaps="handled"
+            scrollEnabled={false}
             showsVerticalScrollIndicator={false}
           >
             {/* ─── CHANGE 2: Middle section shifted up (no top spacer) ─── */}
@@ -112,28 +139,49 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 {/* ─── CHANGE 3a: Email/Phone field — phone-outline icon ─── */}
                 <Text style={styles.label}>Email or Phone</Text>
                 <View style={styles.inputShell}>
-                  <Text style={styles.inputIcon}>{ICONS.phone}</Text>
+                  <View style={styles.inputIcon}>
+                    <Mail size={22} color="#FFD43B" strokeWidth={2.1} />
+                  </View>
                   <TextInput
                     value={loginId}
                     onChangeText={setLoginId}
                     placeholder="Enter email or phone"
                     placeholderTextColor="rgba(255,255,255,0.58)"
                     style={styles.field}
+                    caretHidden={false}
+                    selectionColor="#FFE56A"
+                    cursorColor="#FFE56A"
                     autoCapitalize="none"
+                    autoComplete="username"
+                    textContentType="username"
+                    importantForAutofill="yes"
                     keyboardType="email-address"
+                    onFocus={() => scrollToField(260)}
+                    returnKeyType="next"
                   />
                 </View>
  
                 {/* ─── CHANGE 3b: Password field — lock icon + eye toggle (already present) ─── */}
                 <Text style={styles.label}>Password</Text>
                 <View style={styles.inputShell}>
-                  <Text style={styles.inputIcon}>{ICONS.lock}</Text>
+                  <View style={styles.inputIcon}>
+                    <LockKeyhole size={22} color="#FFD43B" strokeWidth={2.1} />
+                  </View>
                   <TextInput
                     value={password}
                     onChangeText={setPassword}
                     placeholder="Enter password"
                     placeholderTextColor="rgba(255,255,255,0.58)"
                     style={styles.field}
+                    caretHidden={false}
+                    selectionColor="#FFE56A"
+                    cursorColor="#FFE56A"
+                    autoComplete="current-password"
+                    textContentType="password"
+                    importantForAutofill="yes"
+                    onFocus={() => scrollToField(360)}
+                    onSubmitEditing={handleContinue}
+                    returnKeyType="done"
                     secureTextEntry={!passwordVisible}
                   />
                   {/* Eye icon — toggles password visibility */}
@@ -142,27 +190,25 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                     onPress={() => setPasswordVisible(current => !current)}
                     style={styles.eyeButton}
                   >
-                    <Text style={styles.eyeIcon}>
-                      {passwordVisible ? ICONS.eye : ICONS.eyeOff}
-                    </Text>
+                    {passwordVisible ? (
+                      <Eye size={22} color="#FFFFFF" strokeWidth={2} />
+                    ) : (
+                      <EyeOff size={22} color="#FFFFFF" strokeWidth={2} />
+                    )}
                   </TouchableOpacity>
                 </View>
  
                 <TouchableOpacity
                   activeOpacity={0.75}
-                  onPress={() =>
-                    Alert.alert(
-                      'Forgot password',
-                      'Password recovery will be available soon.',
-                    )
-                  }
+                  onPress={() => navigation.navigate('PasswordChange')}
                 >
                   <Text style={styles.forgotText}>Forgot Password?</Text>
                 </TouchableOpacity>
  
                 <TouchableOpacity
                   activeOpacity={0.88}
-                  style={styles.button}
+                  disabled={loading}
+                  style={[styles.button, loading && styles.buttonDisabled]}
                   onPress={handleContinue}
                 >
                   <LinearGradient
@@ -171,8 +217,10 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                     end={{ x: 1, y: 0.5 }}
                     style={styles.buttonGradient}
                   >
+                    {loading && (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    )}
                     <Text style={styles.buttonText}>Login</Text>
-                    <Text style={styles.buttonIcon}>{ICONS.arrowRight}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
  
@@ -193,98 +241,11 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         </LinearGradient>
       </ImageBackground>
  
-      <Modal
+      <PrivacyDisclaimerModal
         visible={showDisclaimer}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDisclaimer(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.disclaimerCard}>
-            <Text style={styles.disclaimerTitle}>
-              Privacy Policy & Disclaimer
-            </Text>
-            <Text style={styles.disclaimerIntro}>
-              Please read and accept before entering Chicken App.
-            </Text>
- 
-            <ScrollView
-              style={styles.disclaimerScroll}
-              showsVerticalScrollIndicator={false}
-            >
-              <Text style={styles.disclaimerText}>
-                Chicken App uses your login details only to identify your
-                account, personalize your app experience, manage wishlist
-                preferences, membership details, product browsing, and future
-                order communication.
-              </Text>
-              <Text style={styles.disclaimerText}>
-                Product images, prices, discounts, nutrition details, quality
-                notes, membership benefits, and delivery information are shown
-                for app experience and may change based on availability,
-                supplier updates, launch status, and service area.
-              </Text>
-              <Text style={styles.disclaimerText}>
-                E-commerce ordering and delivery features may be introduced in
-                future updates. Until then, buttons such as order, payment, and
-                delivery may be demo or informational flows.
-              </Text>
-              <Text style={styles.disclaimerText}>
-                Membership plans, savings, billing dates, and payment success
-                screens shown in the app are for app membership experience.
-                Final charges, taxes, and plan terms should be checked before
-                any real purchase.
-              </Text>
-              <Text style={styles.disclaimerText}>
-                By continuing, you agree to use the app responsibly and accept
-                that food freshness, stock, delivery timing, and offers may vary
-                by location and availability.
-              </Text>
-            </ScrollView>
- 
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={styles.acceptRow}
-              onPress={() => setAcceptedDisclaimer(current => !current)}
-            >
-              <View
-                style={[
-                  styles.checkbox,
-                  acceptedDisclaimer && styles.checkboxActive,
-                ]}
-              >
-                {acceptedDisclaimer && (
-                  <Text style={styles.checkboxIcon}>{ICONS.check}</Text>
-                )}
-              </View>
-              <Text style={styles.acceptText}>
-                I have read and accept the Privacy Policy & Disclaimer.
-              </Text>
-            </TouchableOpacity>
- 
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={styles.cancelButton}
-                onPress={() => setShowDisclaimer(false)}
-              >
-                <Text style={styles.cancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                activeOpacity={0.85}
-                disabled={!acceptedDisclaimer}
-                style={[
-                  styles.acceptButton,
-                  !acceptedDisclaimer && styles.acceptButtonDisabled,
-                ]}
-                onPress={handleAcceptDisclaimer}
-              >
-                <Text style={styles.acceptButtonText}>Accept & Continue</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onAccept={handleAcceptDisclaimer}
+        onClose={() => setShowDisclaimer(false)}
+      />
     </KeyboardAvoidingView>
   );
 };

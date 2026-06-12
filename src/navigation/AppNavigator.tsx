@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import BottomNavigation from '../components/common/BottomNavigation/BottomNavigation';
 import LoginScreen from '../screens/auth/LoginScreen/LoginScreen';
+import PasswordChangeScreen from '../screens/auth/PasswordChangeScreen/PasswordChangeScreen';
 import SignUpScreen from '../screens/auth/SignUpScreen/SignUpScreen';
 import CategoriesScreen from '../screens/home/CategoriesScreen/CategoriesScreen';
 import HomeScreen from '../screens/home/HomeScreen/HomeScreen';
@@ -33,7 +34,11 @@ type MainTabRoute =
   | 'Notifications'
   | 'Profile';
 
-const authRoutes: Array<keyof RootStackParamList> = ['Login', 'SignUp'];
+const authRoutes: Array<keyof RootStackParamList> = [
+  'Login',
+  'SignUp',
+  'PasswordChange',
+];
 const fullScreenRoutes: Array<keyof RootStackParamList> = ['MembershipCheckout'];
 
 const AppNavigator = () => {
@@ -75,6 +80,7 @@ const AppNavigator = () => {
         >
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="SignUp" component={SignUpScreen} />
+          <Stack.Screen name="PasswordChange" component={PasswordChangeScreen} />
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="Categories" component={CategoriesScreen} />
           <Stack.Screen name="Notifications" component={NotificationsScreen} />

@@ -1,5 +1,5 @@
 {
-  "name": "MyApp",
+  "name": "SFC",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -24,6 +24,7 @@
     "react-native-reanimated": "^4.3.1",
     "react-native-safe-area-context": "^5.8.0",
     "react-native-screens": "^4.25.2",
+    "react-native-svg": "^15.15.5",
     "react-native-vector-icons": "^10.3.0",
     "react-native-worklets": "^0.8.3"
   },

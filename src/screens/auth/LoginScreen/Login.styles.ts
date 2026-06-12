@@ -1,6 +1,6 @@
 import { Dimensions, Platform, StyleSheet } from 'react-native';
 
-const { height, width } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 const compactHeight = height < 850;
 const cardPadding = compactHeight ? 16 : 20;
 
@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     paddingHorizontal: 20,
     paddingTop: Platform.OS === 'ios' ? 58 : 40,
-    paddingBottom: compactHeight ? 12 : 20,
+    paddingBottom: compactHeight ? 260 : 320,
   },
   languagePill: {
     alignSelf: 'flex-end',
@@ -70,6 +70,11 @@ const styles = StyleSheet.create({
     paddingTop: compactHeight ? 46 : 66,
     paddingBottom: compactHeight ? 6 : 10,
   },
+  signupHero: {
+    alignItems: 'center',
+    paddingTop: compactHeight ? 14 : 24,
+    paddingBottom: compactHeight ? 4 : 8,
+  },
   middleSection: {
     flexGrow: 1,
     alignItems: 'center',
@@ -78,11 +83,9 @@ const styles = StyleSheet.create({
     paddingBottom: compactHeight ? 8 : 16,
   },
   logoFrame: {
-    width: compactHeight ? 112 : 132,
-    height: compactHeight ? 112 : 132,
-    borderRadius: compactHeight ? 56 : 66,
+    width: compactHeight ? 150 : 172,
+    height: compactHeight ? 120 : 138,
     backgroundColor: 'transparent',
-    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: compactHeight ? 6 : 8,
@@ -90,7 +93,6 @@ const styles = StyleSheet.create({
   logoImage: {
     width: '100%',
     height: '100%',
-    borderRadius: compactHeight ? 56 : 66,
   },
   brandTitle: {
     color: '#FFFFFF',
@@ -195,16 +197,17 @@ const styles = StyleSheet.create({
     height: '100%',
     color: '#FFFFFF',
     fontSize: compactHeight ? 13 : 15,
+    lineHeight: compactHeight ? 19 : 22,
     fontWeight: '600',
     paddingHorizontal: 12,
+    paddingVertical: 0,
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
   inputIcon: {
-    width: 24,
-    color: '#FFD43B',
-    fontSize: 20,
-    lineHeight: 24,
-    fontWeight: '900',
-    textAlign: 'center',
+    width: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   eyeButton: {
     width: 38,
@@ -219,6 +222,35 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontWeight: '900',
   },
+  genderRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: compactHeight ? 8 : 12,
+  },
+  genderOption: {
+    flex: 1,
+    height: compactHeight ? 38 : 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.72)',
+    backgroundColor: 'rgba(0, 0, 0, 0.16)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  genderOptionActive: {
+    borderColor: '#FFD43B',
+    backgroundColor: '#D50000',
+  },
+  genderText: {
+    color: '#FFFFFF',
+    fontSize: compactHeight ? 11 : 13,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  genderTextActive: {
+    color: '#FFFFFF',
+  },
   forgotText: {
     color: '#FFD43B',
     fontSize: 14,
@@ -229,7 +261,9 @@ const styles = StyleSheet.create({
     marginBottom: compactHeight ? 10 : 16,
   },
   button: {
+    width: '68%',
     height: compactHeight ? 48 : 56,
+    alignSelf: 'center',
     borderRadius: 15,
     overflow: 'hidden',
     shadowColor: '#E80016',
@@ -238,24 +272,21 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     elevation: 8,
   },
+  buttonDisabled: {
+    opacity: 0.72,
+  },
   buttonGradient: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: width < 370 ? 42 : 64,
-    paddingHorizontal: 22,
+    gap: 8,
+    paddingHorizontal: 18,
   },
   buttonText: {
     color: '#FFFFFF',
     fontSize: compactHeight ? 18 : 21,
     lineHeight: compactHeight ? 24 : 28,
-    fontWeight: '900',
-  },
-  buttonIcon: {
-    color: '#FFFFFF',
-    fontSize: 28,
-    lineHeight: 30,
     fontWeight: '900',
   },
   signUpRow: {

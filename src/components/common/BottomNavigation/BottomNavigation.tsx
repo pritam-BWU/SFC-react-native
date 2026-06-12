@@ -1,5 +1,12 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Bell,
+  CircleUserRound,
+  Crown,
+  Home as HomeIcon,
+  LayoutGrid,
+} from 'lucide-react-native';
 
 import { RootStackParamList } from '../../../navigation/types';
 
@@ -14,18 +21,19 @@ type Props = {
 
 const RED = '#CC0000';
 const MUTED = '#555555';
+type IconComponent = typeof HomeIcon;
 
 const tabs: Array<{
   route: MainTabRoute;
   label: string;
-  icon: string;
+  icon: IconComponent;
   featured?: boolean;
 }> = [
-  { route: 'Home', label: 'Home', icon: '\u2302' },
-  { route: 'Categories', label: 'Categories', icon: '\u25A6' },
-  { route: 'Subscription', label: 'Membership', icon: '\u265B', featured: true },
-  { route: 'Notifications', label: 'Notifications', icon: '\u25CF' },
-  { route: 'Profile', label: 'Profile', icon: '\u25CE' },
+  { route: 'Home', label: 'Home', icon: HomeIcon },
+  { route: 'Categories', label: 'Categories', icon: LayoutGrid },
+  { route: 'Subscription', label: 'Membership', icon: Crown, featured: true },
+  { route: 'Notifications', label: 'Notifications', icon: Bell },
+  { route: 'Profile', label: 'Profile', icon: CircleUserRound },
 ] as const;
 
 const membershipRoutes: Array<keyof RootStackParamList> = [
@@ -56,6 +64,8 @@ const BottomNavigation = ({ activeRoute, onNavigate }: Props) => {
     <View style={styles.bar}>
       {tabs.map(({ route, label, icon, featured }) => {
         const active = isActive(activeRoute, route);
+        const TabIcon = icon;
+        const iconColor = active || featured ? RED : MUTED;
 
         if (featured) {
           return (
@@ -66,7 +76,7 @@ const BottomNavigation = ({ activeRoute, onNavigate }: Props) => {
               onPress={() => onNavigate(route)}
             >
               <View style={styles.featuredCircle}>
-                <Text style={styles.featuredIcon}>{icon}</Text>
+                <TabIcon size={26} color="#FFFFFF" strokeWidth={2.4} />
               </View>
               <Text style={[styles.label, styles.featuredLabel, active && styles.active]}>
                 {label}
@@ -82,7 +92,7 @@ const BottomNavigation = ({ activeRoute, onNavigate }: Props) => {
             style={styles.tab}
             onPress={() => onNavigate(route)}
           >
-            <Text style={[styles.icon, active && styles.active]}>{icon}</Text>
+            <TabIcon size={22} color={iconColor} strokeWidth={2.3} />
             <Text style={[styles.label, active && styles.active]}>{label}</Text>
           </TouchableOpacity>
         );
@@ -140,18 +150,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '700',
     marginTop: 2,
-  },
-  icon: {
-    color: MUTED,
-    fontSize: 21,
-    fontWeight: '900',
-    lineHeight: 23,
-  },
-  featuredIcon: {
-    color: '#FFFFFF',
-    fontSize: 25,
-    fontWeight: '900',
-    lineHeight: 28,
   },
   featuredLabel: {
     color: RED,

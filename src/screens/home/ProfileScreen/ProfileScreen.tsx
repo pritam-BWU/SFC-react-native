@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Linking,
   Modal,
+  NativeModules,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -9,6 +14,36 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import {
+  ArrowLeft,
+  Bell,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  CircleHelp,
+  CreditCard,
+  Crown,
+  FileText,
+  Headphones,
+  Home,
+  Info,
+  LockKeyhole,
+  LogOut,
+  MessageCircleWarning,
+  Paperclip,
+  Pencil,
+  Phone,
+  ReceiptText,
+  ScrollText,
+  Settings,
+  Share2,
+  ShieldCheck,
+  Trash2,
+  TriangleAlert,
+  UserRound,
+  X,
+} from 'lucide-react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -21,7 +56,19 @@ import membershipPolicy from '../../../../membership_policy.json';
 import privacyPolicy from '../../../../privacy_policy.json';
 import refundPolicy from '../../../../refund_and_cancellation.json';
 import termsPolicy from '../../../../terms_conditions.json';
+import {
+  createIssueReport,
+  getIssueReports,
+  uploadIssueReportDocuments,
+} from '../../../api/report.api';
+import { API_BASE_URL } from '../../../constants/api';
 import { RootStackParamList } from '../../../navigation/types';
+import { authSession } from '../../../services/auth/session.service';
+import {
+  IssueReport,
+  IssueReportDocument,
+  LocalIssueReportDocument,
+} from '../../../types/report.types';
 
 const RED = '#CC0000';
 const DARK = '#101010';
@@ -30,51 +77,22 @@ const PAGE_YELLOW = '#FFF0AD';
 const SOFT_YELLOW = '#FFF7D6';
 const BORDER = '#F1DFA0';
 const PALE_BACKGROUND = '#FFFDF0';
-
-const ICONS = {
-  back: '\u2039',
-  user: '\u{1F464}',
-  home: '\u2302',
-  products: '\u25A6',
-  contact: '\u260E',
-  crown: '\u{1F451}',
-  account: '\u25A3',
-  support: '\u260E',
-  info: 'i',
-  legal: '\u25A4',
-  disclaimer: '!',
-  settings: '\u2699',
-  share: '\u22EF',
-  logout: '\u21B5',
-  attach: '\u25A7',
-  right: '\u203A',
-  down: '\u2304',
-  edit: '\u270E',
-  card: '\u25AD',
-  shield: '\u{1F6E1}\uFE0F',
-  bell: '\u{1F514}',
-  lock: '\u{1F512}',
-  trash: '\u232B',
-  bug: '\u25C7',
-  helpOutline: '?',
-  membershipOutline: '\u25C7',
-  reportOutline: '!',
-  supportOutline: '\u25CE',
-};
+const MAX_REPORT_DOCUMENTS = 10;
+const logoImage = require('../../../logo_image_clean.png');
+type IconComponent = typeof Home;
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
 
 type MenuItem = {
   label: string;
-  icon?: string;
-  outlineIcon?: string;
+  icon: IconComponent;
   detail?: string;
+  onPress?: () => void;
 };
 
 type MenuSection = {
   title: string;
-  icon: string;
-  outlineIcon?: string;
+  icon: IconComponent;
   detail?: string;
   onPress?: () => void;
   items?: MenuItem[];
@@ -84,6 +102,12 @@ type DetailContent = {
   title: string;
   body: string;
   type?: 'text' | 'faqs' | 'report' | 'submitted';
+};
+
+type ReportMode = 'create' | 'history';
+
+type DocumentPickerModule = {
+  pickDocuments: () => Promise<LocalIssueReportDocument[]>;
 };
 
 type PolicyBlock = {
@@ -169,14 +193,63 @@ const policyDetails: Record<string, DetailContent> = {
 
 const faqDocument = faqsPolicy as FaqDocument;
 
+const buildDocumentUrl = (url: string) => {
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+
+  return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
+const getDocumentName = (document: IssueReportDocument) =>
+  document.original_name || document.url.split('/').pop() || 'Attachment';
+
+const documentPicker = (
+  NativeModules as { SfcDocumentPicker?: DocumentPickerModule }
+).SfcDocumentPicker;
+
+const formatReportDate = (value: string) => {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return date.toLocaleDateString(undefined, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+};
+
 const ProfileScreen = ({ navigation }: Props) => {
+  const profile = authSession.getProfile();
+  const user = authSession.getUser();
+  const profileName =
+    profile?.full_name ||
+    [user?.first_name, user?.last_name].filter(Boolean).join(' ') ||
+    'SFC User';
+  const profileContact =
+    profile?.phone_number ||
+    profile?.email_address ||
+    user?.email ||
+    'Member account and app settings';
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({});
   const [activeDetail, setActiveDetail] = useState<DetailContent | null>(null);
   const [activeFaqCategory, setActiveFaqCategory] = useState<string | null>(null);
   const [reportMessage, setReportMessage] = useState('');
-  const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
+  const [attachedFiles, setAttachedFiles] = useState<LocalIssueReportDocument[]>(
+    [],
+  );
+  const [reportMode, setReportMode] = useState<ReportMode>('create');
+  const [reports, setReports] = useState<IssueReport[]>([]);
+  const [selectedReport, setSelectedReport] = useState<IssueReport | null>(
+    null,
+  );
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
 
   const toggleSection = (title: string) => {
     setExpandedSections(current => ({
@@ -185,38 +258,203 @@ const ProfileScreen = ({ navigation }: Props) => {
     }));
   };
 
+  const loadReportHistory = async () => {
+    try {
+      setReportsLoading(true);
+      const reportHistory = (await getIssueReports()).filter(report =>
+        Boolean(report.report_id),
+      );
+      setReports(reportHistory);
+      setSelectedReport(currentReport =>
+        currentReport
+          ? reportHistory.find(
+              report => report.report_id === currentReport.report_id,
+            ) || currentReport
+          : null,
+      );
+    } catch (error) {
+      Alert.alert(
+        'Report history failed',
+        error instanceof Error
+          ? error.message
+          : 'Could not load your report history.',
+      );
+    } finally {
+      setReportsLoading(false);
+    }
+  };
+
+  const openReportIssue = () => {
+    setReportMode('create');
+    setSelectedReport(null);
+    setActiveDetail({
+      title: 'Report an Issue',
+      body: '',
+      type: 'report',
+    });
+    loadReportHistory();
+  };
+
+  const showReportHistory = () => {
+    setReportMode('history');
+    setSelectedReport(null);
+    loadReportHistory();
+  };
+
+  const handleAttachFiles = async () => {
+    if (!documentPicker) {
+      Alert.alert(
+        'File manager unavailable',
+        'Document picking is not available on this device build.',
+      );
+      return;
+    }
+
+    try {
+      const selectedFiles = await documentPicker.pickDocuments();
+
+      if (!selectedFiles.length) {
+        return;
+      }
+
+      setAttachedFiles(currentFiles => {
+        const nextFiles = [...currentFiles];
+
+        selectedFiles.forEach(file => {
+          if (
+            nextFiles.length < MAX_REPORT_DOCUMENTS &&
+            !nextFiles.some(currentFile => currentFile.uri === file.uri)
+          ) {
+            nextFiles.push(file);
+          }
+        });
+
+        if (
+          currentFiles.length + selectedFiles.length > MAX_REPORT_DOCUMENTS
+        ) {
+          Alert.alert(
+            'Attachment limit reached',
+            `You can attach up to ${MAX_REPORT_DOCUMENTS} documents.`,
+          );
+        }
+
+        return nextFiles;
+      });
+    } catch (error) {
+      Alert.alert(
+        'File manager failed',
+        error instanceof Error
+          ? error.message
+          : 'Could not open the file manager.',
+      );
+    }
+  };
+
+  const handleReportSubmit = async () => {
+    if (reportMessage.trim().length < 10) {
+      Alert.alert(
+        'More details needed',
+        'Please write at least 10 characters about the issue.',
+      );
+      return;
+    }
+
+    try {
+      setReportSubmitting(true);
+      const createdReport = await createIssueReport({
+        description: reportMessage,
+      });
+
+      if (attachedFiles.length) {
+        try {
+          await uploadIssueReportDocuments(
+            createdReport.report_id,
+            attachedFiles,
+          );
+        } catch (uploadError) {
+          setReportMessage('');
+          setAttachedFiles([]);
+          setReportMode('history');
+          await loadReportHistory();
+          Alert.alert(
+            'Report saved',
+            `Report ${createdReport.report_id} was saved, but the document upload failed. ${
+              uploadError instanceof Error
+                ? uploadError.message
+                : 'Please try again later.'
+            }`,
+          );
+          return;
+        }
+      }
+
+      setReportMessage('');
+      setAttachedFiles([]);
+      setReportMode('history');
+      await loadReportHistory();
+      setActiveDetail({
+        title: 'Report Submitted',
+        body: createdReport.report_id,
+        type: 'submitted',
+      });
+    } catch (error) {
+      Alert.alert(
+        'Report failed',
+        error instanceof Error
+          ? error.message
+          : 'Could not submit your issue report.',
+      );
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
+
+  const openDocument = async (document: IssueReportDocument) => {
+    try {
+      const documentUrl = buildDocumentUrl(document.url);
+      const canOpen = await Linking.canOpenURL(documentUrl);
+
+      if (!canOpen) {
+        Alert.alert('Cannot open file', 'No app is available to open this document.');
+        return;
+      }
+
+      await Linking.openURL(documentUrl);
+    } catch {
+      Alert.alert('Cannot open file', 'Please try again later.');
+    }
+  };
+
   const sections: MenuSection[] = [
     {
       title: 'Home',
-      icon: ICONS.home,
+      icon: Home,
       onPress: () => navigation.navigate('Home'),
     },
     {
       title: 'Membership',
-      icon: ICONS.crown,
-      outlineIcon: ICONS.membershipOutline,
+      icon: Crown,
       onPress: () => navigation.navigate('Subscription'),
     },
     {
       title: 'My Account',
-      icon: ICONS.account,
+      icon: UserRound,
       items: [
         {
           label: 'Edit Profile',
-          icon: ICONS.edit,
+          icon: Pencil,
           detail:
             'Update your name, phone number, delivery preferences, and account display details. These details help Superfowl FoodClub personalize browsing, membership benefits, and future order communication.',
         },
         {
           label: 'Membership Status',
-          icon: ICONS.crown,
-          outlineIcon: ICONS.membershipOutline,
+          icon: Crown,
           detail:
             'View your active membership plan, renewal status, savings benefits, and plan validity. Membership benefits shown in the app may vary by service area, stock availability, and current offers.',
         },
         {
           label: 'Payment History',
-          icon: ICONS.card,
+          icon: CreditCard,
           detail:
             'Review membership and future order payment records linked with your account. Demo screens may show sample payment data until real checkout and delivery services are enabled.',
         },
@@ -224,24 +462,21 @@ const ProfileScreen = ({ navigation }: Props) => {
     },
     {
       title: 'Support / Help',
-      icon: ICONS.support,
-      outlineIcon: ICONS.supportOutline,
+      icon: Headphones,
       items: [
         {
           label: 'FAQs',
-          icon: ICONS.info,
-          outlineIcon: ICONS.helpOutline,
+          icon: CircleHelp,
         },
         {
           label: 'Report an Issue',
-          icon: ICONS.support,
-          outlineIcon: ICONS.reportOutline,
+          icon: MessageCircleWarning,
           detail:
             'Use this option to report login trouble, wrong product details, missing membership information, payment display issues, or app bugs. Our team may use your account details only to investigate and respond.',
         },
         {
           label: 'Contact Us',
-          icon: ICONS.contact,
+          icon: Phone,
           detail:
             'Email: suoerfowlfoods@gmail.com\n\nContact Number: +91 90000 00000',
         },
@@ -249,89 +484,86 @@ const ProfileScreen = ({ navigation }: Props) => {
     },
     {
       title: 'About Us',
-      icon: ICONS.info,
+      icon: Info,
       detail: policyDetails['About Us'].body,
     },
     {
       title: 'Legal & Policies',
-      icon: ICONS.legal,
+      icon: ScrollText,
       items: [
         {
           label: 'Terms & Conditions',
-          icon: ICONS.legal,
+          icon: FileText,
         },
         {
           label: 'Privacy Policy',
-          icon: ICONS.shield,
+          icon: ShieldCheck,
         },
         {
           label: 'Refund Policy',
-          icon: ICONS.card,
+          icon: ReceiptText,
         },
         {
           label: 'Membership Policy',
-          icon: ICONS.crown,
-          outlineIcon: ICONS.membershipOutline,
+          icon: Crown,
         },
         {
           label: 'Account Deletion Policy',
-          icon: ICONS.trash,
+          icon: Trash2,
         },
       ],
     },
     {
       title: 'Disclaimer',
-      icon: ICONS.disclaimer,
+      icon: TriangleAlert,
       detail: policyDetails.Disclaimer.body,
     },
     {
       title: 'Share APK',
-      icon: ICONS.share,
+      icon: Share2,
     },
     {
       title: 'Settings',
-      icon: ICONS.settings,
+      icon: Settings,
       items: [
         {
           label: 'Privacy & Security',
-          icon: ICONS.shield,
+          icon: ShieldCheck,
           detail:
             'Manage account protection preferences and review how login details are used. Keep your password private and contact support if you notice unauthorized access.',
         },
         {
           label: 'Change Password',
-          icon: ICONS.lock,
-          detail:
-            'Change your password regularly to protect your account. Choose a password that is not shared with other apps and avoid sending it to anyone through chat or phone.',
+          icon: LockKeyhole,
+          onPress: () => navigation.navigate('PasswordChange'),
         },
         {
           label: 'Delete Account',
-          icon: ICONS.trash,
+          icon: Trash2,
           detail:
             'Account deletion is permanent for app profile data and may affect membership access, saved preferences, wishlist items, and future order communication.',
         },
         {
           label: 'Notification',
-          icon: ICONS.bell,
+          icon: Bell,
           detail:
             'Control general app notifications about product availability, offers, app updates, membership information, and important account notices.',
         },
         {
           label: 'Membership Updates',
-          icon: ICONS.crown,
-          outlineIcon: ICONS.membershipOutline,
+          icon: Crown,
           detail:
             'Receive updates about membership benefits, plan changes, savings information, and new subscription features when they become available in your service area.',
         },
         {
           label: 'Renewal Reminders',
-          icon: ICONS.bell,
+          icon: Bell,
           detail:
             'Renewal reminders help you track membership expiry and billing dates. Final renewal amount and terms should be checked before making any real payment.',
         },
         {
           label: 'Push Notifications',
-          icon: ICONS.bell,
+          icon: Bell,
           detail:
             'Push notifications may include offers, freshness updates, delivery announcements, membership reminders, and account alerts. You can adjust device-level notification permissions anytime.',
         },
@@ -339,8 +571,11 @@ const ProfileScreen = ({ navigation }: Props) => {
     },
     {
       title: 'Logout',
-      icon: ICONS.logout,
-      onPress: () => navigation.navigate('Login'),
+      icon: LogOut,
+      onPress: () => {
+        authSession.clear();
+        navigation.navigate('Login');
+      },
     },
   ];
 
@@ -361,22 +596,21 @@ const ProfileScreen = ({ navigation }: Props) => {
       >
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarIcon}>{ICONS.user}</Text>
+            <UserRound size={30} color="#FFFFFF" strokeWidth={2.2} />
           </View>
           <View style={styles.profileTextCol}>
-            <Text style={styles.profileName}>Superfowl FoodClub User</Text>
-            <Text style={styles.profilePhone}>
-              Member account and app settings
-            </Text>
+            <Text style={styles.profileName}>{profileName}</Text>
+            <Text style={styles.profilePhone}>{profileContact}</Text>
           </View>
           <TouchableOpacity activeOpacity={0.8} style={styles.editButton}>
+            <Pencil size={13} color="#FFFFFF" strokeWidth={2.4} />
             <Text style={styles.editText}>Edit</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.menuCard}>
           {sections.map(section => {
-            const SectionOutlineIcon = section.outlineIcon;
+            const SectionIcon = section.icon;
 
             return (
               <View key={section.title} style={styles.sectionBlock}>
@@ -397,21 +631,19 @@ const ProfileScreen = ({ navigation }: Props) => {
                   }
                 >
                   <View style={styles.sectionIconCircle}>
-                    <Text style={styles.sectionIcon}>
-                      {SectionOutlineIcon || section.icon}
-                    </Text>
+                    <SectionIcon size={19} color={RED} strokeWidth={2.3} />
                   </View>
                   <Text style={styles.sectionTitle}>{section.title}</Text>
                   {section.items && expandedSections[section.title] ? (
-                    <Text style={styles.sectionArrow}>{ICONS.down}</Text>
+                    <ChevronDown size={21} color={RED} strokeWidth={2.6} />
                   ) : (
-                    <Text style={styles.sectionArrow}>{ICONS.right}</Text>
+                    <ChevronRight size={21} color={RED} strokeWidth={2.6} />
                   )}
                 </TouchableOpacity>
 
               {expandedSections[section.title] &&
                 section.items?.map(item => {
-                  const SubOutlineIcon = item.outlineIcon;
+                  const ItemIcon = item.icon;
 
                   return (
                     <TouchableOpacity
@@ -419,6 +651,11 @@ const ProfileScreen = ({ navigation }: Props) => {
                       activeOpacity={0.75}
                       style={styles.subRow}
                       onPress={() => {
+                        if (item.onPress) {
+                          item.onPress();
+                          return;
+                        }
+
                         if (item.label === 'FAQs') {
                           setActiveFaqCategory(null);
                           setActiveDetail({
@@ -430,11 +667,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                         }
 
                         if (item.label === 'Report an Issue') {
-                          setActiveDetail({
-                            title: 'Understood',
-                            body: item.detail || '',
-                            type: 'report',
-                          });
+                          openReportIssue();
                           return;
                         }
 
@@ -447,12 +680,10 @@ const ProfileScreen = ({ navigation }: Props) => {
                       }}
                     >
                       <View style={styles.subIconBox}>
-                        <Text style={styles.subIcon}>
-                          {SubOutlineIcon || item.icon}
-                        </Text>
+                        <ItemIcon size={16} color={RED} strokeWidth={2.2} />
                       </View>
                       <Text style={styles.subText}>{item.label}</Text>
-                      <Text style={styles.subArrow}>{ICONS.right}</Text>
+                      <ChevronRight size={18} color={MUTED} strokeWidth={2.4} />
                     </TouchableOpacity>
                   );
                 })}
@@ -488,7 +719,11 @@ const ProfileScreen = ({ navigation }: Props) => {
                           <Text style={styles.faqCategoryTitle}>
                             {category.heading}
                           </Text>
-                          <Text style={styles.subArrow}>{ICONS.right}</Text>
+                          <ChevronRight
+                            size={18}
+                            color={MUTED}
+                            strokeWidth={2.4}
+                          />
                         </TouchableOpacity>
                       ))
                     : faqDocument.categories
@@ -504,64 +739,233 @@ const ProfileScreen = ({ navigation }: Props) => {
                 </View>
               ) : activeDetail?.type === 'report' ? (
                 <View style={styles.reportForm}>
-                  <Text style={styles.reportHint}>
-                    Write your issue details and attach files if needed.
-                  </Text>
-                  <TextInput
-                    value={reportMessage}
-                    onChangeText={setReportMessage}
-                    multiline
-                    textAlignVertical="top"
-                    placeholder="Write your message..."
-                    placeholderTextColor={MUTED}
-                    style={styles.reportInput}
-                  />
-                  <TouchableOpacity
-                    activeOpacity={0.82}
-                    style={styles.attachBox}
-                    onPress={() =>
-                      setAttachedFiles(current => [
-                        ...current,
-                        `Attachment ${current.length + 1}`,
-                      ])
-                    }
-                  >
-                    <Text style={styles.attachIcon}>{ICONS.attach}</Text>
-                    <View style={styles.attachCopy}>
-                      <Text style={styles.attachTitle}>Attach files</Text>
-                      <Text style={styles.attachText}>
-                        Tap to add screenshots or documents.
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                  {attachedFiles.map(file => (
-                    <View key={file} style={styles.attachmentPill}>
-                      <Text style={styles.attachmentText}>{file}</Text>
-                      <TouchableOpacity
-                        activeOpacity={0.8}
-                        style={styles.removeAttachmentButton}
-                        onPress={() =>
-                          setAttachedFiles(current =>
-                            current.filter(item => item !== file),
-                          )
-                        }
+                  <View style={styles.reportModeRow}>
+                    <TouchableOpacity
+                      activeOpacity={0.82}
+                      style={[
+                        styles.reportModeButton,
+                        reportMode === 'create' && styles.reportModeButtonActive,
+                      ]}
+                      onPress={() => setReportMode('create')}
+                    >
+                      <Text
+                        style={[
+                          styles.reportModeText,
+                          reportMode === 'create' && styles.reportModeTextActive,
+                        ]}
                       >
-                        <Text style={styles.removeAttachmentText}>x</Text>
+                        New Report
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.82}
+                      style={[
+                        styles.reportModeButton,
+                        reportMode === 'history' && styles.reportModeButtonActive,
+                      ]}
+                      onPress={showReportHistory}
+                    >
+                      <Text
+                        style={[
+                          styles.reportModeText,
+                          reportMode === 'history' && styles.reportModeTextActive,
+                        ]}
+                      >
+                        History
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {reportMode === 'create' ? (
+                    <>
+                      <Text style={styles.reportHint}>
+                        Write your issue details and attach files if needed.
+                      </Text>
+                      <TextInput
+                        value={reportMessage}
+                        onChangeText={setReportMessage}
+                        multiline
+                        textAlignVertical="top"
+                        placeholder="Write your message..."
+                        placeholderTextColor={MUTED}
+                        style={styles.reportInput}
+                      />
+                      <TouchableOpacity
+                        activeOpacity={0.82}
+                        style={styles.attachBox}
+                        onPress={handleAttachFiles}
+                      >
+                        <View style={styles.attachIconBox}>
+                          <Paperclip size={24} color={RED} strokeWidth={2.2} />
+                        </View>
+                        <View style={styles.attachCopy}>
+                          <Text style={styles.attachTitle}>Attach files</Text>
+                          <Text style={styles.attachText}>
+                            Tap to add screenshots or documents.
+                          </Text>
+                        </View>
                       </TouchableOpacity>
+                      {attachedFiles.map(file => (
+                        <View key={file.uri} style={styles.attachmentPill}>
+                          <Text style={styles.attachmentText}>{file.name}</Text>
+                          <TouchableOpacity
+                            activeOpacity={0.8}
+                            style={styles.removeAttachmentButton}
+                            onPress={() =>
+                              setAttachedFiles(current =>
+                                current.filter(item => item.uri !== file.uri),
+                              )
+                            }
+                          >
+                            <X size={13} color="#FFFFFF" strokeWidth={3} />
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </>
+                  ) : selectedReport ? (
+                    <View style={styles.reportDetailPanel}>
+                      <TouchableOpacity
+                        activeOpacity={0.78}
+                        style={styles.reportBackRow}
+                        onPress={() => setSelectedReport(null)}
+                      >
+                        <ArrowLeft size={16} color={RED} strokeWidth={2.4} />
+                        <Text style={styles.reportBackText}>Report history</Text>
+                      </TouchableOpacity>
+                      <View style={styles.reportDetailHeader}>
+                        <View style={styles.reportDetailIdBlock}>
+                          <Text style={styles.reportHistoryId}>
+                            {selectedReport.report_id}
+                          </Text>
+                          <Text style={styles.reportHistoryDate}>
+                            {formatReportDate(selectedReport.created_at)}
+                          </Text>
+                        </View>
+                        <Text style={styles.reportStatus}>
+                          {selectedReport.status}
+                        </Text>
+                      </View>
+                      <Text style={styles.reportDetailLabel}>Issue details</Text>
+                      <Text style={styles.reportHistoryDescription}>
+                        {selectedReport.description}
+                      </Text>
+                      <Text style={styles.reportDetailLabel}>Documents</Text>
+                      {selectedReport.attachments.length ? (
+                        <View style={styles.documentList}>
+                          {selectedReport.attachments.map(document => (
+                            <TouchableOpacity
+                              key={document.id}
+                              activeOpacity={0.78}
+                              style={styles.documentRow}
+                              onPress={() => openDocument(document)}
+                            >
+                              <View style={styles.documentIconBox}>
+                                <Paperclip
+                                  size={17}
+                                  color={RED}
+                                  strokeWidth={2.2}
+                                />
+                              </View>
+                              <Text style={styles.documentName}>
+                                {getDocumentName(document)}
+                              </Text>
+                              <ChevronRight
+                                size={18}
+                                color={MUTED}
+                                strokeWidth={2.4}
+                              />
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      ) : (
+                        <Text style={styles.noDocumentsText}>
+                          No documents attached.
+                        </Text>
+                      )}
                     </View>
-                  ))}
+                  ) : reportsLoading ? (
+                    <View style={styles.reportLoadingBox}>
+                      <ActivityIndicator size="small" color={RED} />
+                      <Text style={styles.reportLoadingText}>Loading reports...</Text>
+                    </View>
+                  ) : reports.length ? (
+                    <View style={styles.reportHistoryList}>
+                      {reports.map(report => (
+                        <TouchableOpacity
+                          key={report.report_id}
+                          activeOpacity={0.82}
+                          style={styles.reportHistoryCard}
+                          onPress={() => setSelectedReport(report)}
+                        >
+                          <View style={styles.reportHistoryHeader}>
+                            <Text style={styles.reportHistoryId}>
+                              {report.report_id}
+                            </Text>
+                            <Text style={styles.reportStatus}>{report.status}</Text>
+                            <TouchableOpacity
+                              activeOpacity={0.78}
+                              style={styles.reportEditButton}
+                              onPress={() => setSelectedReport(report)}
+                            >
+                              <Pencil size={14} color="#FFFFFF" strokeWidth={2.4} />
+                            </TouchableOpacity>
+                          </View>
+                          <Text style={styles.reportHistoryDate}>
+                            {formatReportDate(report.created_at)}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  ) : (
+                    <Text style={styles.emptyReportsText}>
+                      No issue reports found yet.
+                    </Text>
+                  )}
                 </View>
               ) : activeDetail?.type === 'submitted' ? (
-                <Text style={styles.detailBody}>
-                  Your report has been submitted. Our support team will review it.
-                </Text>
+                <View style={styles.submittedPanel}>
+                  <LinearGradient
+                    colors={['#FFD739', '#FF8A18', RED]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.submittedLogoAura}
+                  >
+                    <View style={styles.submittedLogoFrame}>
+                      <Image
+                        source={logoImage}
+                        style={styles.submittedLogo}
+                        resizeMode="contain"
+                      />
+                    </View>
+                  </LinearGradient>
+                  <View style={styles.submittedCheckBadge}>
+                    <Check size={18} color="#FFFFFF" strokeWidth={3} />
+                  </View>
+                  <Text style={styles.submittedTitle}>Report submitted</Text>
+                  <Text style={styles.submittedMessage}>
+                    Thanks for sharing the issue. Our support team has received
+                    it and will review the details shortly.
+                  </Text>
+                  <View style={styles.submittedTicket}>
+                    <Text style={styles.submittedTicketLabel}>Ticket ID</Text>
+                    <Text style={styles.submittedTicketValue}>
+                      {activeDetail.body}
+                    </Text>
+                  </View>
+                </View>
               ) : (
                 <Text style={styles.detailBody}>{activeDetail?.body}</Text>
               )}
             </ScrollView>
             <TouchableOpacity
               activeOpacity={0.8}
-              style={styles.detailButton}
+              disabled={activeDetail?.type === 'report' && reportSubmitting}
+              style={[
+                styles.detailButton,
+                activeDetail?.type === 'report' &&
+                  reportSubmitting &&
+                  styles.detailButtonDisabled,
+              ]}
               onPress={() => {
                 if (activeDetail?.type === 'faqs' && activeFaqCategory) {
                   setActiveFaqCategory(null);
@@ -569,26 +973,33 @@ const ProfileScreen = ({ navigation }: Props) => {
                 }
 
                 if (activeDetail?.type === 'report') {
-                  setActiveDetail({
-                    title: 'Report Submitted',
-                    body: '',
-                    type: 'submitted',
-                  });
-                  setReportMessage('');
-                  setAttachedFiles([]);
+                  if (reportMode === 'create') {
+                    handleReportSubmit();
+                    return;
+                  }
+
+                  setActiveDetail(null);
                   return;
                 }
 
                 setActiveDetail(null);
               }}
             >
-              <Text style={styles.detailButtonText}>
-                {activeDetail?.type === 'faqs' && activeFaqCategory
-                  ? 'Back to Categories'
-                  : activeDetail?.type === 'report'
-                    ? 'Submit'
-                  : 'Got it'}
-              </Text>
+              {activeDetail?.type === 'report' && reportSubmitting ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.detailButtonText}>
+                  {activeDetail?.type === 'faqs' && activeFaqCategory
+                    ? 'Back to Categories'
+                    : activeDetail?.type === 'report'
+                      ? reportMode === 'create'
+                        ? 'Submit'
+                        : 'Close'
+                      : activeDetail?.type === 'submitted'
+                        ? 'Done'
+                      : 'Got it'}
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -648,6 +1059,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     borderRadius: 10,
     backgroundColor: RED,
     paddingHorizontal: 14,
@@ -863,6 +1277,34 @@ const styles = StyleSheet.create({
   reportForm: {
     gap: 12,
   },
+  reportModeRow: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: PALE_BACKGROUND,
+    padding: 4,
+  },
+  reportModeButton: {
+    flex: 1,
+    minHeight: 38,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  reportModeButtonActive: {
+    backgroundColor: RED,
+  },
+  reportModeText: {
+    color: RED,
+    fontSize: 12,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  reportModeTextActive: {
+    color: '#FFFFFF',
+  },
   reportHint: {
     color: DARK,
     fontSize: 13,
@@ -893,12 +1335,10 @@ const styles = StyleSheet.create({
     backgroundColor: SOFT_YELLOW,
     paddingHorizontal: 12,
   },
-  attachIcon: {
+  attachIconBox: {
     width: 32,
-    color: RED,
-    fontSize: 24,
-    fontWeight: '900',
-    textAlign: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 10,
   },
   attachCopy: {
@@ -947,6 +1387,257 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     fontWeight: '900',
   },
+  reportLoadingBox: {
+    minHeight: 92,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 12,
+    backgroundColor: PALE_BACKGROUND,
+    borderWidth: 1,
+    borderColor: '#F3E5B7',
+  },
+  reportLoadingText: {
+    color: MUTED,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  reportHistoryList: {
+    gap: 10,
+  },
+  reportHistoryCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F3E5B7',
+    backgroundColor: PALE_BACKGROUND,
+    padding: 12,
+  },
+  reportHistoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  reportEditButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: RED,
+  },
+  reportEditIcon: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: '900',
+  },
+  reportHistoryId: {
+    flex: 1,
+    color: RED,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '900',
+  },
+  reportStatus: {
+    borderRadius: 8,
+    backgroundColor: SOFT_YELLOW,
+    color: RED,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '900',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    overflow: 'hidden',
+  },
+  reportHistoryDate: {
+    color: MUTED,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  reportHistoryDescription: {
+    color: '#333333',
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  reportDetailPanel: {
+    gap: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F3E5B7',
+    backgroundColor: PALE_BACKGROUND,
+    padding: 12,
+  },
+  reportBackRow: {
+    alignSelf: 'flex-start',
+    minHeight: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  reportBackText: {
+    color: RED,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '900',
+  },
+  reportDetailHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  reportDetailIdBlock: {
+    flex: 1,
+  },
+  reportDetailLabel: {
+    color: DARK,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '900',
+    marginTop: 4,
+  },
+  documentList: {
+    gap: 7,
+    marginTop: 10,
+  },
+  documentRow: {
+    minHeight: 38,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+  },
+  documentIconBox: {
+    width: 24,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  documentName: {
+    flex: 1,
+    color: DARK,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '800',
+  },
+  noDocumentsText: {
+    color: MUTED,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '700',
+    marginTop: 9,
+  },
+  emptyReportsText: {
+    color: MUTED,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '700',
+    textAlign: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F3E5B7',
+    backgroundColor: PALE_BACKGROUND,
+    padding: 18,
+  },
+  submittedPanel: {
+    alignItems: 'center',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#F3E5B7',
+    backgroundColor: PALE_BACKGROUND,
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 18,
+    overflow: 'hidden',
+  },
+  submittedLogoAura: {
+    width: 94,
+    height: 94,
+    borderRadius: 47,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  submittedLogoFrame: {
+    width: 78,
+    height: 78,
+    borderRadius: 39,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submittedLogo: {
+    width: 64,
+    height: 64,
+  },
+  submittedCheckBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    backgroundColor: RED,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -24,
+    marginBottom: 12,
+  },
+  submittedCheckText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  submittedTitle: {
+    color: DARK,
+    fontSize: 20,
+    lineHeight: 25,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  submittedMessage: {
+    color: MUTED,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  submittedTicket: {
+    width: '100%',
+    minHeight: 54,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    marginTop: 16,
+  },
+  submittedTicketLabel: {
+    color: MUTED,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  submittedTicketValue: {
+    color: RED,
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: '900',
+    marginTop: 2,
+    textAlign: 'center',
+  },
   detailButton: {
     height: 46,
     borderRadius: 12,
@@ -954,6 +1645,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 18,
+  },
+  detailButtonDisabled: {
+    opacity: 0.7,
   },
   detailButtonText: {
     color: '#FFFFFF',

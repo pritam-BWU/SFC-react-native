@@ -14,40 +14,26 @@ import {
   View,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {
-  Eye,
-  EyeOff,
-  LockKeyhole,
-  Mail,
-  UserRound,
-} from 'lucide-react-native';
+import { Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { signupUser } from '../../../api/auth.api';
+import { changePassword } from '../../../api/auth.api';
 import { RootStackParamList } from '../../../navigation/types';
-import { Gender } from '../../../types/auth.types';
-import PrivacyDisclaimerModal from '../components/PrivacyDisclaimerModal';
+import { authSession } from '../../../services/auth/session.service';
 import styles from '../LoginScreen/Login.styles';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'PasswordChange'>;
 
 const backgroundImage = require('../../../images.png');
 const logoImage = require('../../../logo_image_clean.png');
 
-const genderOptions: Array<{ label: string; value: Gender }> = [
-  { label: 'Male', value: 'M' },
-  { label: 'Female', value: 'F' },
-  { label: 'Other', value: 'O' },
-];
-
-const SignUpScreen: React.FC<Props> = ({ navigation }) => {
+const PasswordChangeScreen: React.FC<Props> = ({ navigation }) => {
   const scrollRef = useRef<ScrollView>(null);
-  const [fullName, setFullName] = useState('');
   const [loginId, setLoginId] = useState('');
-  const [gender, setGender] = useState<Gender | null>(null);
-  const [password, setPassword] = useState('');
-  const [passwordVisible, setPasswordVisible] = useState(false);
-  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [newPasswordVisible, setNewPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const scrollToField = (y: number) => {
@@ -64,27 +50,32 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
     return () => keyboardHideSubscription.remove();
   }, []);
 
-  const handleSignUp = async () => {
-    if (!fullName.trim() || !loginId.trim() || !gender || !password.trim()) {
+  const handleSave = async () => {
+    if (!loginId.trim() || !newPassword.trim() || !confirmPassword.trim()) {
       Alert.alert(
         'Missing details',
-        'Please enter your name, email or phone number, gender, and password.',
+        'Please enter your email or phone number and both password fields.',
       );
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert('Password mismatch', 'Please re-enter the same new password.');
       return;
     }
 
     try {
       setLoading(true);
-      await signupUser({
-        full_name: fullName,
+      await changePassword({
         login_id: loginId,
-        gender,
-        password,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
       });
-      setShowDisclaimer(true);
+      authSession.clear();
+      navigation.replace('Login');
     } catch (error) {
       Alert.alert(
-        'Signup failed',
+        'Password update failed',
         error instanceof Error
           ? error.message
           : 'Please check the details and try again.',
@@ -138,33 +129,11 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
 
             <View style={styles.loginCard}>
               <Text style={styles.cardTitle}>
-                Create <Text style={styles.cardTitleAccent}>Account</Text>
+                Change <Text style={styles.cardTitleAccent}>Password</Text>
               </Text>
               <Text style={styles.cardSubtitle}>
-                Sign up for your fresh meat experience
+                Save a new password for your SFC account
               </Text>
-
-              <Text style={styles.label}>Full Name</Text>
-              <View style={styles.inputShell}>
-                <View style={styles.inputIcon}>
-                  <UserRound size={22} color="#FFD43B" strokeWidth={2.1} />
-                </View>
-                <TextInput
-                  value={fullName}
-                  onChangeText={setFullName}
-                  placeholder="Enter full name"
-                  placeholderTextColor="rgba(255,255,255,0.58)"
-                  style={styles.field}
-                  caretHidden={false}
-                  selectionColor="#FFE56A"
-                  cursorColor="#FFE56A"
-                  autoComplete="name"
-                  textContentType="name"
-                  importantForAutofill="yes"
-                  onFocus={() => scrollToField(220)}
-                  returnKeyType="next"
-                />
-              </View>
 
               <Text style={styles.label}>Email or Phone</Text>
               <View style={styles.inputShell}>
@@ -185,48 +154,20 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
                   textContentType="username"
                   importantForAutofill="yes"
                   keyboardType="email-address"
-                  onFocus={() => scrollToField(310)}
+                  onFocus={() => scrollToField(230)}
                   returnKeyType="next"
                 />
               </View>
 
-              <Text style={styles.label}>Gender</Text>
-              <View style={styles.genderRow}>
-                {genderOptions.map(option => {
-                  const selected = gender === option.value;
-
-                  return (
-                    <TouchableOpacity
-                      key={option.value}
-                      activeOpacity={0.78}
-                      style={[
-                        styles.genderOption,
-                        selected && styles.genderOptionActive,
-                      ]}
-                      onPress={() => setGender(option.value)}
-                    >
-                      <Text
-                        style={[
-                          styles.genderText,
-                          selected && styles.genderTextActive,
-                        ]}
-                      >
-                        {option.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>New Password</Text>
               <View style={styles.inputShell}>
                 <View style={styles.inputIcon}>
                   <LockKeyhole size={22} color="#FFD43B" strokeWidth={2.1} />
                 </View>
                 <TextInput
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Enter password"
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  placeholder="Enter new password"
                   placeholderTextColor="rgba(255,255,255,0.58)"
                   style={styles.field}
                   caretHidden={false}
@@ -235,17 +176,51 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
                   autoComplete="new-password"
                   textContentType="newPassword"
                   importantForAutofill="yes"
-                  onFocus={() => scrollToField(500)}
-                  onSubmitEditing={handleSignUp}
-                  returnKeyType="done"
-                  secureTextEntry={!passwordVisible}
+                  onFocus={() => scrollToField(320)}
+                  returnKeyType="next"
+                  secureTextEntry={!newPasswordVisible}
                 />
                 <TouchableOpacity
                   activeOpacity={0.75}
-                  onPress={() => setPasswordVisible(current => !current)}
+                  onPress={() => setNewPasswordVisible(current => !current)}
                   style={styles.eyeButton}
                 >
-                  {passwordVisible ? (
+                  {newPasswordVisible ? (
+                    <Eye size={22} color="#FFFFFF" strokeWidth={2} />
+                  ) : (
+                    <EyeOff size={22} color="#FFFFFF" strokeWidth={2} />
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.label}>Re-enter New Password</Text>
+              <View style={styles.inputShell}>
+                <View style={styles.inputIcon}>
+                  <LockKeyhole size={22} color="#FFD43B" strokeWidth={2.1} />
+                </View>
+                <TextInput
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Re-enter new password"
+                  placeholderTextColor="rgba(255,255,255,0.58)"
+                  style={styles.field}
+                  caretHidden={false}
+                  selectionColor="#FFE56A"
+                  cursorColor="#FFE56A"
+                  autoComplete="new-password"
+                  textContentType="newPassword"
+                  importantForAutofill="yes"
+                  onFocus={() => scrollToField(430)}
+                  onSubmitEditing={handleSave}
+                  returnKeyType="done"
+                  secureTextEntry={!confirmPasswordVisible}
+                />
+                <TouchableOpacity
+                  activeOpacity={0.75}
+                  onPress={() => setConfirmPasswordVisible(current => !current)}
+                  style={styles.eyeButton}
+                >
+                  {confirmPasswordVisible ? (
                     <Eye size={22} color="#FFFFFF" strokeWidth={2} />
                   ) : (
                     <EyeOff size={22} color="#FFFFFF" strokeWidth={2} />
@@ -257,7 +232,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
                 activeOpacity={0.88}
                 disabled={loading}
                 style={[styles.button, loading && styles.buttonDisabled]}
-                onPress={handleSignUp}
+                onPress={handleSave}
               >
                 <LinearGradient
                   colors={['#FFD739', '#FF8317', '#E80016']}
@@ -268,18 +243,18 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
                   {loading && (
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   )}
-                  <Text style={styles.buttonText}>Sign Up</Text>
+                  <Text style={styles.buttonText}>Save</Text>
                 </LinearGradient>
               </TouchableOpacity>
 
               <View style={styles.signUpRow}>
                 <View style={styles.signUpLine} />
-                <Text style={styles.signUpCopy}>Already have an account?</Text>
+                <Text style={styles.signUpCopy}>Remember your password?</Text>
                 <View style={styles.signUpLine} />
               </View>
               <TouchableOpacity
                 activeOpacity={0.75}
-                onPress={() => navigation.navigate('Login')}
+                onPress={() => navigation.replace('Login')}
               >
                 <Text style={styles.signUpText}>Login</Text>
               </TouchableOpacity>
@@ -287,16 +262,8 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
           </ScrollView>
         </LinearGradient>
       </ImageBackground>
-      <PrivacyDisclaimerModal
-        visible={showDisclaimer}
-        onAccept={() => {
-          setShowDisclaimer(false);
-          navigation.replace('Home');
-        }}
-        onClose={() => setShowDisclaimer(false)}
-      />
     </KeyboardAvoidingView>
   );
 };
 
-export default SignUpScreen;
+export default PasswordChangeScreen;
