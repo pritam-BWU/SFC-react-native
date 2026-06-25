@@ -25,15 +25,15 @@ export type RootStackParamList = {
   };
   MembershipPlanDetail: {
     membershipType: 'flexible' | 'durable';
-    planId: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
+    planId: 'starter' | 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
   };
   MembershipCheckout: {
     membershipType: 'flexible' | 'durable';
-    planId: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
+    planId: 'starter' | 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
   };
   MembershipSuccess: {
     membershipType: 'flexible' | 'durable';
-    planId: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
+    planId: 'starter' | 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
   };
   AdminDashboard: undefined;
 };

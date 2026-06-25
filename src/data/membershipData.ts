@@ -1,5 +1,6 @@
 export type MembershipTypeId = 'flexible' | 'durable';
 export type MembershipPlanId =
+  | 'starter'
   | 'bronze'
   | 'silver'
   | 'gold'
@@ -156,6 +157,22 @@ export const membershipTypes: Record<MembershipTypeId, MembershipType> = {
       'Extended validity membership with enhanced benefits and higher pricing eligibility.',
     icon: '\u{1F451}',
     plans: [
+      {
+        id: 'starter',
+        name: 'Starter',
+        monthlyConsumptionKg: 0,
+        yearlyConsumptionKg: 0,
+        approxPricePerKg: 0,
+        membershipFee: 846,
+        membershipFeeWithGst: 999,
+        offerPrice: 999,
+        usage: 'Starter Access',
+        eligibility: 'Refer & Earn',
+        icon: '\u2726',
+        accent: '#CC0000',
+        softAccent: '#FFF0EF',
+        benefits: durableBenefits,
+      },
       {
         id: 'bronze',
         name: 'Bronze',

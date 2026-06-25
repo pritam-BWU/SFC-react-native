@@ -131,11 +131,11 @@ const MembershipSuccessScreen = ({ navigation, route }: Props) => {
               <Text style={styles.successCheck}>{ICONS.check}</Text>
             </View>
             <Text style={styles.heroTitle}>
-              Welcome to Superfowl FoodClub{'\n'}as a Member!
+              Payment Received{'\n'}Approval Pending
             </Text>
             <Text style={styles.heroText}>
-              Thank you for joining. You are now part of Superfowl FoodClub and can enjoy
-              member benefits.
+              Thank you for completing the payment. Your membership is now
+              waiting for office confirmation.
             </Text>
           </View>
 
@@ -182,8 +182,8 @@ const MembershipSuccessScreen = ({ navigation, route }: Props) => {
               Payment Successful!
             </Text>
             <Text style={styles.paymentText}>
-              Your {plan.name} {membership.shortTitle.toLowerCase()} is active
-              and all member benefits are unlocked.
+              Your {plan.name} {membership.shortTitle.toLowerCase()} payment is
+              complete. Benefits unlock after admin approval.
             </Text>
           </View>
           {membershipType === 'flexible' && (

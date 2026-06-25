@@ -4,6 +4,7 @@ import {
   NavigationContainer,
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import BottomNavigation from '../components/common/BottomNavigation/BottomNavigation';
@@ -22,6 +23,7 @@ import QualitySourceScreen from '../screens/home/QualitySourceScreen/QualitySour
 import ProfileScreen from '../screens/home/ProfileScreen/ProfileScreen';
 import SearchResultsScreen from '../screens/home/SearchResultsScreen/SearchResultsScreen';
 import SubscriptionScreen from '../screens/home/SubscriptionScreen/SubscriptionScreen';
+import { authSession } from '../services/auth/session.service';
 import { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -42,8 +44,27 @@ const authRoutes: Array<keyof RootStackParamList> = [
 const fullScreenRoutes: Array<keyof RootStackParamList> = ['MembershipCheckout'];
 
 const AppNavigator = () => {
+  const [initialRoute, setInitialRoute] =
+    React.useState<keyof RootStackParamList | null>(null);
   const [activeRoute, setActiveRoute] =
     React.useState<keyof RootStackParamList>('Login');
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    authSession.restoreAuth().then(isLoggedIn => {
+      if (!isMounted) {
+        return;
+      }
+      const nextRoute = isLoggedIn ? 'Home' : 'Login';
+      setInitialRoute(nextRoute);
+      setActiveRoute(nextRoute);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const updateActiveRoute = () => {
     const routeName = navigationRef.getCurrentRoute()?.name;
@@ -64,6 +85,23 @@ const AppNavigator = () => {
   const showBottomNav =
     !authRoutes.includes(activeRoute) && !fullScreenRoutes.includes(activeRoute);
 
+  if (!initialRoute) {
+    return (
+      <SafeAreaProvider>
+        <View
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#FFFDF3',
+          }}
+        >
+          <ActivityIndicator color="#CC0000" />
+        </View>
+      </SafeAreaProvider>
+    );
+  }
+
   return (
     <SafeAreaProvider>
       <NavigationContainer
@@ -72,7 +110,7 @@ const AppNavigator = () => {
         onStateChange={updateActiveRoute}
       >
         <Stack.Navigator
-          initialRouteName="Login"
+          initialRouteName={initialRoute}
           screenOptions={{
             headerShown: false,
             contentStyle: { backgroundColor: '#FFFDF3' },

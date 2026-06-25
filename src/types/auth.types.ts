@@ -11,13 +11,23 @@ export type AuthUser = {
 export type AuthProfile = {
   id: string;
   full_name: string;
+  dob: string | null;
   email_address: string;
   phone_number: string;
   gender: Gender | '';
+  nationality: string;
+  address: string;
+  city: string;
+  state: string;
+  postal_code: string;
   subscription_plan_id: number | null;
   subscription_status_id: number | null;
   subscription_status: string;
+  referral_code: string;
+  referred_by: string | null;
   is_active: boolean;
+  profile_completion_percentage: number;
+  missing_required_fields: string[];
 };
 
 export type AuthResponse = {
@@ -37,6 +47,7 @@ export type SignupRequest = {
   login_id: string;
   gender: Gender;
   password: string;
+  referral_code?: string;
 };
 
 export type PasswordChangeRequest = {

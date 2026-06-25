@@ -19,6 +19,7 @@ import {
   EyeOff,
   LockKeyhole,
   Mail,
+  Ticket,
   UserRound,
 } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -44,6 +45,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   const scrollRef = useRef<ScrollView>(null);
   const [fullName, setFullName] = useState('');
   const [loginId, setLoginId] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [gender, setGender] = useState<Gender | null>(null);
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -80,6 +82,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
         login_id: loginId,
         gender,
         password,
+        referral_code: referralCode,
       });
       setShowDisclaimer(true);
     } catch (error) {
@@ -118,7 +121,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
             contentInsetAdjustmentBehavior="always"
             keyboardDismissMode="interactive"
             keyboardShouldPersistTaps="handled"
-            scrollEnabled={false}
+            scrollEnabled
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.signupHero}>
@@ -186,6 +189,27 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
                   importantForAutofill="yes"
                   keyboardType="email-address"
                   onFocus={() => scrollToField(310)}
+                  returnKeyType="next"
+                />
+              </View>
+
+              <Text style={styles.label}>Referral Code (Optional)</Text>
+              <View style={styles.inputShell}>
+                <View style={styles.inputIcon}>
+                  <Ticket size={22} color="#FFD43B" strokeWidth={2.1} />
+                </View>
+                <TextInput
+                  value={referralCode}
+                  onChangeText={setReferralCode}
+                  placeholder="Enter referral code"
+                  placeholderTextColor="rgba(255,255,255,0.58)"
+                  style={styles.field}
+                  caretHidden={false}
+                  selectionColor="#FFE56A"
+                  cursorColor="#FFE56A"
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  onFocus={() => scrollToField(400)}
                   returnKeyType="next"
                 />
               </View>

@@ -64,6 +64,16 @@
       "title": "LONG-DURATION MEMBERSHIP ACCESS",
       "plans": [
         {
+          "name": "Starter",
+          "benefits": [
+            "Non-refundable starter membership access",
+            "Refer and earn eligibility after successful referrals",
+            "Global pool eligibility up to the starter plan limit",
+            "Product and platform update notifications",
+            "Standard member assistance access"
+          ]
+        },
+        {
           "name": "Bronze",
           "benefits": [
             "Enhanced long-duration member pricing eligibility",

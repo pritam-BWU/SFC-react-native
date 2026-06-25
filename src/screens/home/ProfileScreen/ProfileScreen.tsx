@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -61,14 +61,21 @@ import {
   getIssueReports,
   uploadIssueReportDocuments,
 } from '../../../api/report.api';
+import {
+  getMobileProfile,
+  updateMobileProfile,
+  UpdateProfileRequest,
+} from '../../../api/profile.api';
 import { API_BASE_URL } from '../../../constants/api';
 import { RootStackParamList } from '../../../navigation/types';
 import { authSession } from '../../../services/auth/session.service';
+import { Gender } from '../../../types/auth.types';
 import {
   IssueReport,
   IssueReportDocument,
   LocalIssueReportDocument,
 } from '../../../types/report.types';
+import { getProfileCompletion } from '../../../utils/profileCompletion';
 
 const RED = '#CC0000';
 const DARK = '#101010';
@@ -201,6 +208,25 @@ const buildDocumentUrl = (url: string) => {
   return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
+const genderOptions: Array<{ label: string; value: Gender }> = [
+  { label: 'Male', value: 'M' },
+  { label: 'Female', value: 'F' },
+  { label: 'Other', value: 'O' },
+];
+
+const emptyProfileForm: UpdateProfileRequest = {
+  full_name: '',
+  dob: '',
+  gender: 'O',
+  nationality: '',
+  address: '',
+  city: '',
+  state: '',
+  postal_code: '',
+  phone_number: '',
+  email_address: '',
+};
+
 const getDocumentName = (document: IssueReportDocument) =>
   document.original_name || document.url.split('/').pop() || 'Attachment';
 
@@ -223,8 +249,10 @@ const formatReportDate = (value: string) => {
 };
 
 const ProfileScreen = ({ navigation }: Props) => {
-  const profile = authSession.getProfile();
+  const [profileSnapshot, setProfileSnapshot] = useState(authSession.getProfile());
+  const profile = profileSnapshot;
   const user = authSession.getUser();
+  const completion = getProfileCompletion(profile);
   const profileName =
     profile?.full_name ||
     [user?.first_name, user?.last_name].filter(Boolean).join(' ') ||
@@ -234,6 +262,10 @@ const ProfileScreen = ({ navigation }: Props) => {
     profile?.email_address ||
     user?.email ||
     'Member account and app settings';
+  const [editProfileVisible, setEditProfileVisible] = useState(false);
+  const [profileForm, setProfileForm] =
+    useState<UpdateProfileRequest>(emptyProfileForm);
+  const [profileSaving, setProfileSaving] = useState(false);
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({});
@@ -250,6 +282,98 @@ const ProfileScreen = ({ navigation }: Props) => {
   );
   const [reportsLoading, setReportsLoading] = useState(false);
   const [reportSubmitting, setReportSubmitting] = useState(false);
+
+  const fillProfileForm = () => {
+    const currentProfile = authSession.getProfile();
+    setProfileForm({
+      full_name: currentProfile?.full_name || '',
+      dob: currentProfile?.dob || '',
+      gender: currentProfile?.gender || 'O',
+      nationality: currentProfile?.nationality || '',
+      address: currentProfile?.address || '',
+      city: currentProfile?.city || '',
+      state: currentProfile?.state || '',
+      postal_code: currentProfile?.postal_code || '',
+      phone_number: currentProfile?.phone_number || '',
+      email_address: currentProfile?.email_address || user?.email || '',
+    });
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    getMobileProfile()
+      .then(nextProfile => {
+        if (isMounted) {
+          setProfileSnapshot(nextProfile);
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const openProfileEditor = () => {
+    fillProfileForm();
+    setEditProfileVisible(true);
+  };
+
+  const updateProfileForm = (
+    field: keyof UpdateProfileRequest,
+    value: string,
+  ) => {
+    setProfileForm(current => ({
+      ...current,
+      [field]: field === 'gender' ? (value as Gender) : value,
+    }));
+  };
+
+  const handleProfileSave = async () => {
+    const missingFields = [
+      !profileForm.full_name.trim() && 'Name',
+      !profileForm.dob.trim() && 'DoB',
+      !profileForm.gender && 'Gender',
+      !profileForm.nationality.trim() && 'Nationality',
+      !profileForm.address.trim() && 'Address',
+      !profileForm.city.trim() && 'City',
+      !profileForm.state.trim() && 'State/Province',
+      !profileForm.postal_code.trim() && 'ZIP/Postal code',
+      !profileForm.phone_number.trim() && 'Phone',
+      !profileForm.email_address.trim() && 'Email',
+    ].filter(Boolean);
+
+    if (missingFields.length) {
+      Alert.alert('Complete profile', `Please fill: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    try {
+      setProfileSaving(true);
+      const updatedProfile = await updateMobileProfile({
+        ...profileForm,
+        full_name: profileForm.full_name.trim(),
+        dob: profileForm.dob.trim(),
+        nationality: profileForm.nationality.trim(),
+        address: profileForm.address.trim(),
+        city: profileForm.city.trim(),
+        state: profileForm.state.trim(),
+        postal_code: profileForm.postal_code.trim(),
+        phone_number: profileForm.phone_number.trim(),
+        email_address: profileForm.email_address.trim(),
+      });
+      setProfileSnapshot(updatedProfile);
+      setEditProfileVisible(false);
+      Alert.alert('Profile saved', 'Your account details are updated.');
+    } catch (error) {
+      Alert.alert(
+        'Profile update failed',
+        error instanceof Error ? error.message : 'Please try again.',
+      );
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
   const toggleSection = (title: string) => {
     setExpandedSections(current => ({
@@ -443,8 +567,7 @@ const ProfileScreen = ({ navigation }: Props) => {
         {
           label: 'Edit Profile',
           icon: Pencil,
-          detail:
-            'Update your name, phone number, delivery preferences, and account display details. These details help Superfowl FoodClub personalize browsing, membership benefits, and future order communication.',
+          onPress: openProfileEditor,
         },
         {
           label: 'Membership Status',
@@ -595,14 +718,38 @@ const ProfileScreen = ({ navigation }: Props) => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <UserRound size={30} color="#FFFFFF" strokeWidth={2.2} />
+          <View style={styles.avatarWrap}>
+            <View style={styles.avatar}>
+              <UserRound size={30} color="#FFFFFF" strokeWidth={2.2} />
+            </View>
+            <View
+              style={[
+                styles.completionBadge,
+                completion.isComplete && styles.completionBadgeComplete,
+              ]}
+            >
+              <Text style={styles.completionBadgeText}>
+                {completion.percentage}%
+              </Text>
+            </View>
           </View>
           <View style={styles.profileTextCol}>
             <Text style={styles.profileName}>{profileName}</Text>
             <Text style={styles.profilePhone}>{profileContact}</Text>
+            <Text
+              style={[
+                styles.profileCompletionText,
+                completion.isComplete && styles.profileCompletionTextComplete,
+              ]}
+            >
+              Account data {completion.percentage}% complete
+            </Text>
           </View>
-          <TouchableOpacity activeOpacity={0.8} style={styles.editButton}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.editButton}
+            onPress={openProfileEditor}
+          >
             <Pencil size={13} color="#FFFFFF" strokeWidth={2.4} />
             <Text style={styles.editText}>Edit</Text>
           </TouchableOpacity>
@@ -692,6 +839,157 @@ const ProfileScreen = ({ navigation }: Props) => {
           })}
         </View>
       </ScrollView>
+
+      <Modal
+        visible={editProfileVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEditProfileVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.detailCard}>
+            <Text style={styles.detailTitle}>Complete Account Details</Text>
+            <Text style={styles.profileEditHint}>
+              All fields are mandatory before membership payment.
+            </Text>
+            <ScrollView
+              style={styles.profileEditScroll}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <Text style={styles.profileInputLabel}>Name</Text>
+              <TextInput
+                value={profileForm.full_name}
+                onChangeText={value => updateProfileForm('full_name', value)}
+                placeholder="Full name"
+                style={styles.profileInput}
+              />
+
+              <Text style={styles.profileInputLabel}>DoB</Text>
+              <TextInput
+                value={profileForm.dob}
+                onChangeText={value => updateProfileForm('dob', value)}
+                placeholder="YYYY-MM-DD"
+                style={styles.profileInput}
+              />
+
+              <Text style={styles.profileInputLabel}>Gender</Text>
+              <View style={styles.profileGenderRow}>
+                {genderOptions.map(option => {
+                  const selected = profileForm.gender === option.value;
+
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      activeOpacity={0.78}
+                      style={[
+                        styles.profileGenderButton,
+                        selected && styles.profileGenderButtonActive,
+                      ]}
+                      onPress={() => updateProfileForm('gender', option.value)}
+                    >
+                      <Text
+                        style={[
+                          styles.profileGenderText,
+                          selected && styles.profileGenderTextActive,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={styles.profileInputLabel}>Nationality</Text>
+              <TextInput
+                value={profileForm.nationality}
+                onChangeText={value => updateProfileForm('nationality', value)}
+                placeholder="Nationality"
+                style={styles.profileInput}
+              />
+
+              <Text style={styles.profileInputLabel}>Address</Text>
+              <TextInput
+                value={profileForm.address}
+                onChangeText={value => updateProfileForm('address', value)}
+                placeholder="Address"
+                multiline
+                style={[styles.profileInput, styles.profileAddressInput]}
+              />
+
+              <Text style={styles.profileInputLabel}>City</Text>
+              <TextInput
+                value={profileForm.city}
+                onChangeText={value => updateProfileForm('city', value)}
+                placeholder="City"
+                style={styles.profileInput}
+              />
+
+              <Text style={styles.profileInputLabel}>State/Province</Text>
+              <TextInput
+                value={profileForm.state}
+                onChangeText={value => updateProfileForm('state', value)}
+                placeholder="State or province"
+                style={styles.profileInput}
+              />
+
+              <Text style={styles.profileInputLabel}>ZIP/Postal code</Text>
+              <TextInput
+                value={profileForm.postal_code}
+                onChangeText={value => updateProfileForm('postal_code', value)}
+                placeholder="ZIP or postal code"
+                keyboardType="number-pad"
+                style={styles.profileInput}
+              />
+
+              <Text style={styles.profileInputLabel}>Phone</Text>
+              <TextInput
+                value={profileForm.phone_number}
+                onChangeText={value => updateProfileForm('phone_number', value)}
+                placeholder="Phone number"
+                keyboardType="phone-pad"
+                style={styles.profileInput}
+              />
+
+              <Text style={styles.profileInputLabel}>Email</Text>
+              <TextInput
+                value={profileForm.email_address}
+                onChangeText={value => updateProfileForm('email_address', value)}
+                placeholder="Email address"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                style={styles.profileInput}
+              />
+            </ScrollView>
+
+            <View style={styles.profileEditActions}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={styles.profileCancelButton}
+                onPress={() => setEditProfileVisible(false)}
+              >
+                <Text style={styles.profileCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                disabled={profileSaving}
+                style={[
+                  styles.profileSaveButton,
+                  profileSaving && styles.detailButtonDisabled,
+                ]}
+                onPress={handleProfileSave}
+              >
+                {profileSaving ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.profileSaveText}>Save</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         visible={Boolean(activeDetail)}
@@ -1031,6 +1329,11 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 12,
   },
+  avatarWrap: {
+    width: 64,
+    height: 64,
+    marginRight: 12,
+  },
   avatar: {
     width: 54,
     height: 54,
@@ -1038,7 +1341,28 @@ const styles = StyleSheet.create({
     backgroundColor: RED,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+  },
+  completionBadge: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    minWidth: 34,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    backgroundColor: '#F59E0B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 5,
+  },
+  completionBadgeComplete: {
+    backgroundColor: '#059669',
+  },
+  completionBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '900',
   },
   avatarIcon: {
     color: '#FFFFFF',
@@ -1057,6 +1381,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     marginTop: 4,
+  },
+  profileCompletionText: {
+    color: '#B45309',
+    fontSize: 11,
+    fontWeight: '900',
+    marginTop: 4,
+  },
+  profileCompletionTextComplete: {
+    color: '#047857',
   },
   editButton: {
     flexDirection: 'row',
@@ -1167,6 +1500,98 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     fontWeight: '900',
     marginBottom: 10,
+  },
+  profileEditHint: {
+    color: MUTED,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  profileEditScroll: {
+    maxHeight: 430,
+  },
+  profileInputLabel: {
+    color: DARK,
+    fontSize: 12,
+    fontWeight: '900',
+    marginBottom: 6,
+    marginTop: 10,
+  },
+  profileInput: {
+    minHeight: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F3E5B7',
+    backgroundColor: PALE_BACKGROUND,
+    color: DARK,
+    fontSize: 13,
+    fontWeight: '700',
+    paddingHorizontal: 12,
+  },
+  profileAddressInput: {
+    minHeight: 76,
+    paddingTop: 10,
+    textAlignVertical: 'top',
+  },
+  profileGenderRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  profileGenderButton: {
+    flex: 1,
+    minHeight: 42,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: PALE_BACKGROUND,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileGenderButtonActive: {
+    backgroundColor: RED,
+    borderColor: RED,
+  },
+  profileGenderText: {
+    color: RED,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  profileGenderTextActive: {
+    color: '#FFFFFF',
+  },
+  profileEditActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 16,
+  },
+  profileCancelButton: {
+    flex: 1,
+    height: 46,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileCancelText: {
+    color: RED,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  profileSaveButton: {
+    flex: 1,
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: RED,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileSaveText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '900',
   },
   detailScroll: {
     maxHeight: 430,

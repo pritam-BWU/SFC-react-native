@@ -111,6 +111,7 @@ const buildSignupBody = (request: SignupRequest) => {
     phone_number: isEmail ? '' : phoneNumber,
     gender: request.gender,
     password: request.password,
+    referral_code: request.referral_code?.trim().toUpperCase() || '',
   };
 };
 
