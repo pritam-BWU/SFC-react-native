@@ -66,6 +66,7 @@ import {
   updateMobileProfile,
   UpdateProfileRequest,
 } from '../../../api/profile.api';
+import ProfileAccountFields from '../../../components/ProfileAccountFields';
 import { API_BASE_URL } from '../../../constants/api';
 import { RootStackParamList } from '../../../navigation/types';
 import { authSession } from '../../../services/auth/session.service';
@@ -208,12 +209,6 @@ const buildDocumentUrl = (url: string) => {
   return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
-const genderOptions: Array<{ label: string; value: Gender }> = [
-  { label: 'Male', value: 'M' },
-  { label: 'Female', value: 'F' },
-  { label: 'Other', value: 'O' },
-];
-
 const emptyProfileForm: UpdateProfileRequest = {
   full_name: '',
   dob: '',
@@ -337,8 +332,8 @@ const ProfileScreen = ({ navigation }: Props) => {
       !profileForm.nationality.trim() && 'Nationality',
       !profileForm.address.trim() && 'Address',
       !profileForm.city.trim() && 'City',
-      !profileForm.state.trim() && 'State/Province',
-      !profileForm.postal_code.trim() && 'ZIP/Postal code',
+      !profileForm.state.trim() && 'State',
+      !profileForm.postal_code.trim() && 'Postal Code',
       !profileForm.phone_number.trim() && 'Phone',
       !profileForm.email_address.trim() && 'Email',
     ].filter(Boolean);
@@ -857,109 +852,9 @@ const ProfileScreen = ({ navigation }: Props) => {
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-              <Text style={styles.profileInputLabel}>Name</Text>
-              <TextInput
-                value={profileForm.full_name}
-                onChangeText={value => updateProfileForm('full_name', value)}
-                placeholder="Full name"
-                style={styles.profileInput}
-              />
-
-              <Text style={styles.profileInputLabel}>DoB</Text>
-              <TextInput
-                value={profileForm.dob}
-                onChangeText={value => updateProfileForm('dob', value)}
-                placeholder="YYYY-MM-DD"
-                style={styles.profileInput}
-              />
-
-              <Text style={styles.profileInputLabel}>Gender</Text>
-              <View style={styles.profileGenderRow}>
-                {genderOptions.map(option => {
-                  const selected = profileForm.gender === option.value;
-
-                  return (
-                    <TouchableOpacity
-                      key={option.value}
-                      activeOpacity={0.78}
-                      style={[
-                        styles.profileGenderButton,
-                        selected && styles.profileGenderButtonActive,
-                      ]}
-                      onPress={() => updateProfileForm('gender', option.value)}
-                    >
-                      <Text
-                        style={[
-                          styles.profileGenderText,
-                          selected && styles.profileGenderTextActive,
-                        ]}
-                      >
-                        {option.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              <Text style={styles.profileInputLabel}>Nationality</Text>
-              <TextInput
-                value={profileForm.nationality}
-                onChangeText={value => updateProfileForm('nationality', value)}
-                placeholder="Nationality"
-                style={styles.profileInput}
-              />
-
-              <Text style={styles.profileInputLabel}>Address</Text>
-              <TextInput
-                value={profileForm.address}
-                onChangeText={value => updateProfileForm('address', value)}
-                placeholder="Address"
-                multiline
-                style={[styles.profileInput, styles.profileAddressInput]}
-              />
-
-              <Text style={styles.profileInputLabel}>City</Text>
-              <TextInput
-                value={profileForm.city}
-                onChangeText={value => updateProfileForm('city', value)}
-                placeholder="City"
-                style={styles.profileInput}
-              />
-
-              <Text style={styles.profileInputLabel}>State/Province</Text>
-              <TextInput
-                value={profileForm.state}
-                onChangeText={value => updateProfileForm('state', value)}
-                placeholder="State or province"
-                style={styles.profileInput}
-              />
-
-              <Text style={styles.profileInputLabel}>ZIP/Postal code</Text>
-              <TextInput
-                value={profileForm.postal_code}
-                onChangeText={value => updateProfileForm('postal_code', value)}
-                placeholder="ZIP or postal code"
-                keyboardType="number-pad"
-                style={styles.profileInput}
-              />
-
-              <Text style={styles.profileInputLabel}>Phone</Text>
-              <TextInput
-                value={profileForm.phone_number}
-                onChangeText={value => updateProfileForm('phone_number', value)}
-                placeholder="Phone number"
-                keyboardType="phone-pad"
-                style={styles.profileInput}
-              />
-
-              <Text style={styles.profileInputLabel}>Email</Text>
-              <TextInput
-                value={profileForm.email_address}
-                onChangeText={value => updateProfileForm('email_address', value)}
-                placeholder="Email address"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                style={styles.profileInput}
+              <ProfileAccountFields
+                profileForm={profileForm}
+                updateProfileForm={updateProfileForm}
               />
             </ScrollView>
 

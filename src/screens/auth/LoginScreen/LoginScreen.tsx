@@ -122,7 +122,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
               </View>
  
               <Text style={styles.brandTitle}>Superfowl</Text>
-              <Text style={styles.brandAccent}>FoodClub</Text>
+              <Text style={styles.brandAccent}>Food Club</Text>
  
               <Text style={styles.tagline}>
                 Premium Quality. Fresh. Hygienic. Always.

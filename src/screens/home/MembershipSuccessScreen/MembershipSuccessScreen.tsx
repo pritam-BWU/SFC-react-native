@@ -140,7 +140,7 @@ const MembershipSuccessScreen = ({ navigation, route }: Props) => {
           </View>
 
           <View style={styles.memberCard}>
-            <Text style={styles.cardBrand}>Superfowl FoodClub</Text>
+            <Text style={styles.cardBrand}>Superfowl Food Club</Text>
             <Text style={styles.cardMember}>MEMBER</Text>
             <View style={styles.cardDetailsRow}>
               <View>

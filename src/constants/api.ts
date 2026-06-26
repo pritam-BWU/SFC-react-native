@@ -7,6 +7,7 @@ export const API_ENDPOINTS = {
   mobileSignup: '/api/mobile/signup/',
   mobileChangePassword: '/api/mobile/change-password/',
   mobileProfile: '/api/mobile/profile/',
+  mobileLocationMaster: '/api/mobile/location-master/',
   mobileReportIssue: '/api/mobile/report-issue/',
   mobileReportIssueDocuments: (reportId: string) =>
     `/api/mobile/report-issue/${encodeURIComponent(reportId)}/documents/`,

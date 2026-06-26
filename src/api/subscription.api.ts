@@ -32,6 +32,42 @@ const getErrorMessage = (payload: unknown): string => {
   return values.map(value => getErrorMessage(value)).join('\n');
 };
 
+const parseApiResponse = async (response: Response) => {
+  const rawText = await response.text();
+  const contentType = response.headers.get('content-type') || '';
+
+  if (!rawText) {
+    return null;
+  }
+
+  if (contentType.includes('application/json')) {
+    try {
+      return JSON.parse(rawText);
+    } catch {
+      throw new Error('The server returned invalid payment data. Please try again.');
+    }
+  }
+
+  const trimmedText = rawText.trim();
+  if (trimmedText.startsWith('{') || trimmedText.startsWith('[')) {
+    try {
+      return JSON.parse(trimmedText);
+    } catch {
+      throw new Error('The server returned invalid payment data. Please try again.');
+    }
+  }
+
+  if (trimmedText.startsWith('<')) {
+    throw new Error(
+      response.status === 401 || response.status === 403
+        ? 'Your session has expired. Please log in again.'
+        : 'The server returned a web page instead of payment data. Please check the app API URL and backend deployment.',
+    );
+  }
+
+  return trimmedText;
+};
+
 const postJson = async <TBody extends object, TResponse>(
   endpoint: string,
   body: TBody,
@@ -55,7 +91,7 @@ const postJson = async <TBody extends object, TResponse>(
       body: JSON.stringify(body),
       signal: controller.signal,
     });
-    const data = await response.json();
+    const data = await parseApiResponse(response);
 
     if (!response.ok) {
       throw new Error(getErrorMessage(data));

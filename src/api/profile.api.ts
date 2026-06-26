@@ -35,6 +35,42 @@ const getErrorMessage = (payload: unknown): string => {
     : 'Something went wrong. Please try again.';
 };
 
+const parseApiResponse = async (response: Response) => {
+  const rawText = await response.text();
+  const contentType = response.headers.get('content-type') || '';
+
+  if (!rawText) {
+    return null;
+  }
+
+  if (contentType.includes('application/json')) {
+    try {
+      return JSON.parse(rawText);
+    } catch {
+      throw new Error('The server returned invalid profile data. Please try again.');
+    }
+  }
+
+  const trimmedText = rawText.trim();
+  if (trimmedText.startsWith('{') || trimmedText.startsWith('[')) {
+    try {
+      return JSON.parse(trimmedText);
+    } catch {
+      throw new Error('The server returned invalid profile data. Please try again.');
+    }
+  }
+
+  if (trimmedText.startsWith('<')) {
+    throw new Error(
+      response.status === 401 || response.status === 403
+        ? 'Your session has expired. Please log in again.'
+        : 'The server returned a web page instead of profile data. Please check the app API URL and backend deployment.',
+    );
+  }
+
+  return trimmedText;
+};
+
 const requestProfile = async (
   method: 'GET' | 'PATCH',
   body?: UpdateProfileRequest,
@@ -55,10 +91,10 @@ const requestProfile = async (
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });
-  const data = await response.json();
+  const data = await parseApiResponse(response);
 
   if (!response.ok) {
-    throw new Error(getErrorMessage(data));
+    throw new Error(getErrorMessage(data) || 'Profile update failed. Please try again.');
   }
 
   authSession.updateProfile(data as AuthProfile);

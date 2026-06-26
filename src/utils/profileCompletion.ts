@@ -12,8 +12,8 @@ export const requiredProfileFields: RequiredProfileField[] = [
   { key: 'nationality', label: 'Nationality' },
   { key: 'address', label: 'Address' },
   { key: 'city', label: 'City' },
-  { key: 'state', label: 'State/Province' },
-  { key: 'postal_code', label: 'ZIP/Postal code' },
+  { key: 'state', label: 'State' },
+  { key: 'postal_code', label: 'Postal Code' },
   { key: 'phone_number', label: 'Phone' },
   { key: 'email_address', label: 'Email' },
 ];

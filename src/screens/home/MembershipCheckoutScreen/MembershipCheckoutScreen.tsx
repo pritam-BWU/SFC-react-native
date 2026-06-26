@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
+  Modal,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -22,6 +23,7 @@ import {
 } from '../../../api/profile.api';
 import { confirmPayment, createPaymentOrder } from '../../../api/subscription.api';
 import FoodClubHeader from '../../../components/common/FoodClubHeader/FoodClubHeader';
+import ProfileAccountFields from '../../../components/ProfileAccountFields';
 import { getMembershipPlan, membershipTypes } from '../../../data/membershipData';
 import {
   getMemberBenefitsForPlan,
@@ -41,6 +43,7 @@ const SOFT_YELLOW = '#FFF7D6';
 const PALE_YELLOW = '#FFFDF0';
 const BORDER = '#EFE5C2';
 const BENEFIT_CARD_WIDTH = Math.min(154, width * 0.38);
+const REFERRAL_CODE_LENGTH = 11;
 
 const ICONS = {
   back: '\u2039',
@@ -54,6 +57,11 @@ const ICONS = {
 };
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MembershipCheckout'>;
+type PaymentNotice = {
+  title: string;
+  message: string;
+  type?: 'referral' | 'payment';
+};
 
 const benefitIcons = [
   ICONS.tag,
@@ -61,12 +69,6 @@ const benefitIcons = [
   ICONS.bell,
   ICONS.shield,
   ICONS.check,
-];
-
-const genderOptions: Array<{ label: string; value: Gender }> = [
-  { label: 'Male', value: 'M' },
-  { label: 'Female', value: 'F' },
-  { label: 'Other', value: 'O' },
 ];
 
 const emptyProfileForm: UpdateProfileRequest = {
@@ -85,10 +87,61 @@ const emptyProfileForm: UpdateProfileRequest = {
 const formatMoney = (amount: number) =>
   `\u20B9${amount.toLocaleString('en-IN')}`;
 
+const parsePaymentErrorPayload = (error: unknown) => {
+  if (error instanceof Error) {
+    const message = error.message.trim();
+    if (message.startsWith('{') || message.startsWith('[')) {
+      try {
+        return JSON.parse(message) as PaymentErrorData;
+      } catch {
+        return { description: message } as PaymentErrorData;
+      }
+    }
+    return { description: message } as PaymentErrorData;
+  }
+
+  if (error && typeof error === 'object') {
+    return error as PaymentErrorData;
+  }
+
+  return { description: '' } as PaymentErrorData;
+};
+
+const getPaymentNotice = (error: unknown): PaymentNotice => {
+  const paymentError = parsePaymentErrorPayload(error);
+  const description = String(paymentError.description || '').trim();
+  const reason = String(paymentError.reason || '').trim();
+  const code = paymentError.code;
+  const normalizedText = `${description} ${reason}`.toLowerCase();
+  const isCancelled =
+    code === 0 ||
+    normalizedText.includes('cancel') ||
+    normalizedText.includes('dismiss') ||
+    reason === 'payment_cancelled';
+
+  if (isCancelled) {
+    return {
+      title: 'Payment cancelled',
+      message: 'Your payment was not completed. No amount has been confirmed for this membership.',
+      type: 'payment',
+    };
+  }
+
+  return {
+    title: 'Payment not completed',
+    message:
+      description ||
+      reason ||
+      'Payment could not be completed. Please try again.',
+    type: 'payment',
+  };
+};
+
 const MembershipCheckoutScreen = ({ navigation, route }: Props) => {
   const [paymentInProgress, setPaymentInProgress] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSnapshot, setProfileSnapshot] = useState(authSession.getProfile());
+  const [paymentNotice, setPaymentNotice] = useState<PaymentNotice | null>(null);
   const [profileForm, setProfileForm] = useState<UpdateProfileRequest>(() => {
     const currentProfile = authSession.getProfile();
     return {
@@ -119,6 +172,7 @@ const MembershipCheckoutScreen = ({ navigation, route }: Props) => {
   const memberBenefits = getMemberBenefitsForPlan(membershipType, plan);
   const profile = profileSnapshot;
   const completion = getProfileCompletion(profile);
+  const hasReferralLink = Boolean(profile?.referred_by);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -166,8 +220,8 @@ const MembershipCheckoutScreen = ({ navigation, route }: Props) => {
       !profileForm.nationality.trim() && 'Nationality',
       !profileForm.address.trim() && 'Address',
       !profileForm.city.trim() && 'City',
-      !profileForm.state.trim() && 'State/Province',
-      !profileForm.postal_code.trim() && 'ZIP/Postal code',
+      !profileForm.state.trim() && 'State',
+      !profileForm.postal_code.trim() && 'Postal Code',
       !profileForm.phone_number.trim() && 'Phone',
       !profileForm.email_address.trim() && 'Email',
     ].filter(Boolean);
@@ -208,6 +262,15 @@ const MembershipCheckoutScreen = ({ navigation, route }: Props) => {
       return;
     }
 
+    if (!hasReferralLink && !referralCode.trim()) {
+      setPaymentNotice({
+        title: 'Referral code required',
+        message: 'Please enter a valid referral code before membership payment.',
+        type: 'referral',
+      });
+      return;
+    }
+
     setPaymentInProgress(true);
 
     try {
@@ -218,14 +281,16 @@ const MembershipCheckoutScreen = ({ navigation, route }: Props) => {
       });
 
       if (!paymentOrder.razorpay_key_id || !paymentOrder.gateway_order_id) {
-        throw new Error('Payment gateway is not configured for this plan.');
+        throw new Error(
+          'Razorpay is not configured on the server. Please check the backend payment environment variables.',
+        );
       }
 
       const paymentResult = await RazorpayCheckout.open({
         key: paymentOrder.razorpay_key_id,
         amount: paymentOrder.amount_in_paise,
         currency: paymentOrder.order.currency,
-        name: 'Superfowl FoodClub',
+        name: 'Superfowl Food Club',
         description: `${paymentOrder.order.subscription_plan_name} Membership`,
         order_id: paymentOrder.gateway_order_id,
         prefill: {
@@ -258,18 +323,19 @@ const MembershipCheckoutScreen = ({ navigation, route }: Props) => {
         planId: plan.id,
       });
     } catch (error) {
-      const paymentError = error as PaymentErrorData;
-      const message =
-        error instanceof Error
-          ? error.message
-          : paymentError.description ||
-            paymentError.reason ||
-            'Payment was cancelled or could not be completed.';
-
-      Alert.alert('Payment not completed', message);
+      setPaymentNotice(getPaymentNotice(error));
     } finally {
       setPaymentInProgress(false);
     }
+  };
+
+  const submitReferralFromNotice = () => {
+    if (!referralCode.trim()) {
+      return;
+    }
+
+    setPaymentNotice(null);
+    setTimeout(handlePayment, 0);
   };
 
   return (
@@ -277,7 +343,7 @@ const MembershipCheckoutScreen = ({ navigation, route }: Props) => {
       <StatusBar backgroundColor="#FFFFFF" barStyle="dark-content" />
 
       <FoodClubHeader
-        title="Subscribe to FoodClub Membership"
+        title="Subscribe to Food Club Membership"
         showBack
         onBack={() => navigation.goBack()}
       />
@@ -352,35 +418,10 @@ const MembershipCheckoutScreen = ({ navigation, route }: Props) => {
               </Text>
             )}
 
-            <Text style={styles.profileInputLabel}>Name</Text>
-            <TextInput value={profileForm.full_name} onChangeText={value => updateProfileForm('full_name', value)} placeholder="Full name" style={styles.profileInput} />
-            <Text style={styles.profileInputLabel}>DoB</Text>
-            <TextInput value={profileForm.dob} onChangeText={value => updateProfileForm('dob', value)} placeholder="YYYY-MM-DD" style={styles.profileInput} />
-            <Text style={styles.profileInputLabel}>Gender</Text>
-            <View style={styles.profileGenderRow}>
-              {genderOptions.map(option => {
-                const selected = profileForm.gender === option.value;
-                return (
-                  <TouchableOpacity key={option.value} activeOpacity={0.78} style={[styles.profileGenderButton, selected && styles.profileGenderButtonActive]} onPress={() => updateProfileForm('gender', option.value)}>
-                    <Text style={[styles.profileGenderText, selected && styles.profileGenderTextActive]}>{option.label}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            <Text style={styles.profileInputLabel}>Nationality</Text>
-            <TextInput value={profileForm.nationality} onChangeText={value => updateProfileForm('nationality', value)} placeholder="Nationality" style={styles.profileInput} />
-            <Text style={styles.profileInputLabel}>Address</Text>
-            <TextInput value={profileForm.address} onChangeText={value => updateProfileForm('address', value)} placeholder="Address" multiline style={[styles.profileInput, styles.profileAddressInput]} />
-            <Text style={styles.profileInputLabel}>City</Text>
-            <TextInput value={profileForm.city} onChangeText={value => updateProfileForm('city', value)} placeholder="City" style={styles.profileInput} />
-            <Text style={styles.profileInputLabel}>State/Province</Text>
-            <TextInput value={profileForm.state} onChangeText={value => updateProfileForm('state', value)} placeholder="State or province" style={styles.profileInput} />
-            <Text style={styles.profileInputLabel}>ZIP/Postal code</Text>
-            <TextInput value={profileForm.postal_code} onChangeText={value => updateProfileForm('postal_code', value)} placeholder="ZIP or postal code" keyboardType="number-pad" style={styles.profileInput} />
-            <Text style={styles.profileInputLabel}>Phone</Text>
-            <TextInput value={profileForm.phone_number} onChangeText={value => updateProfileForm('phone_number', value)} placeholder="Phone number" keyboardType="phone-pad" style={styles.profileInput} />
-            <Text style={styles.profileInputLabel}>Email</Text>
-            <TextInput value={profileForm.email_address} onChangeText={value => updateProfileForm('email_address', value)} placeholder="Email address" keyboardType="email-address" autoCapitalize="none" style={styles.profileInput} />
+            <ProfileAccountFields
+              profileForm={profileForm}
+              updateProfileForm={updateProfileForm}
+            />
 
             <TouchableOpacity activeOpacity={0.85} disabled={profileSaving} style={[styles.profileSaveButton, profileSaving && styles.payButtonDisabled]} onPress={handleProfileSave}>
               {profileSaving ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.profileSaveText}>Save and Continue</Text>}
@@ -391,16 +432,31 @@ const MembershipCheckoutScreen = ({ navigation, route }: Props) => {
         <View style={styles.referralCard}>
           <Text style={styles.sectionTitle}>Referral Code</Text>
           <Text style={styles.referralText}>
-            If a friend shared a referral code with you, add it here before payment.
+            {hasReferralLink
+              ? 'Your account is already linked with a referral chain.'
+              : 'Referral code is mandatory before membership payment.'}
           </Text>
-          <TextInput
-            value={referralCode}
-            onChangeText={value => setReferralCode(value.toUpperCase())}
-            placeholder="Optional referral code"
-            autoCapitalize="characters"
-            autoCorrect={false}
-            style={styles.profileInput}
-          />
+          {hasReferralLink ? (
+            <View style={styles.referralLinkedBox}>
+              <Text style={styles.referralLinkedText}>Referral linked</Text>
+            </View>
+          ) : (
+            <TextInput
+              value={referralCode}
+              onChangeText={value =>
+                setReferralCode(
+                  value
+                    .toUpperCase()
+                    .replace(/[^A-Z0-9]/g, '')
+                    .slice(0, REFERRAL_CODE_LENGTH),
+                )
+              }
+              placeholder="Enter referral code"
+              autoCapitalize="characters"
+              autoCorrect={false}
+              style={styles.profileInput}
+            />
+          )}
         </View>
 
         <View style={styles.benefitsCard}>
@@ -503,6 +559,70 @@ const MembershipCheckoutScreen = ({ navigation, route }: Props) => {
           </>
         )}
       </ScrollView>
+
+      <Modal
+        visible={Boolean(paymentNotice)}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPaymentNotice(null)}
+      >
+        <View style={styles.paymentNoticeOverlay}>
+          <View style={styles.paymentNoticeCard}>
+            <Text style={styles.paymentNoticeIcon}>!</Text>
+            <Text style={styles.paymentNoticeTitle}>{paymentNotice?.title}</Text>
+            <Text style={styles.paymentNoticeText}>{paymentNotice?.message}</Text>
+            {paymentNotice?.type === 'referral' ? (
+              <>
+                <TextInput
+                  value={referralCode}
+                  onChangeText={value =>
+                    setReferralCode(
+                      value
+                        .toUpperCase()
+                        .replace(/[^A-Z0-9]/g, '')
+                        .slice(0, REFERRAL_CODE_LENGTH),
+                    )
+                  }
+                  placeholder="Enter referral code"
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  style={styles.paymentReferralInput}
+                />
+                <View style={styles.paymentNoticeActions}>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={styles.paymentNoticeSecondaryButton}
+                    onPress={() => setPaymentNotice(null)}
+                  >
+                    <Text style={styles.paymentNoticeSecondaryText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    disabled={!referralCode.trim()}
+                    style={[
+                      styles.paymentNoticeButton,
+                      !referralCode.trim() && styles.paymentNoticeButtonDisabled,
+                    ]}
+                    onPress={submitReferralFromNotice}
+                  >
+                    <Text style={styles.paymentNoticeButtonText}>Submit</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <View style={styles.paymentNoticeSingleAction}>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={styles.paymentNoticeButton}
+                  onPress={() => setPaymentNotice(null)}
+                >
+                  <Text style={styles.paymentNoticeButtonText}>OK</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
 
       {completion.isComplete && (
       <View style={styles.payBar}>
@@ -841,6 +961,21 @@ const styles = StyleSheet.create({
     marginTop: 6,
     marginBottom: 10,
   },
+  referralLinkedBox: {
+    minHeight: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#B7E0C1',
+    backgroundColor: '#F0FFF4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  referralLinkedText: {
+    color: '#167A36',
+    fontSize: 13,
+    fontWeight: '900',
+  },
   benefitsRow: {
     gap: 10,
     paddingTop: 12,
@@ -1044,6 +1179,104 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '900',
+  },
+  paymentNoticeOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.42)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 22,
+  },
+  paymentNoticeCard: {
+    width: '100%',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    alignItems: 'center',
+  },
+  paymentNoticeIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    overflow: 'hidden',
+    backgroundColor: SOFT_YELLOW,
+    color: RED,
+    fontSize: 26,
+    lineHeight: 42,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  paymentNoticeTitle: {
+    color: DARK,
+    fontSize: 18,
+    fontWeight: '900',
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  paymentNoticeText: {
+    color: MUTED,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: '700',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  paymentNoticeButton: {
+    flex: 1,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: RED,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paymentNoticeButtonDisabled: {
+    opacity: 0.55,
+  },
+  paymentNoticeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  paymentNoticeActions: {
+    width: '100%',
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+  },
+  paymentNoticeSingleAction: {
+    width: 128,
+    marginTop: 16,
+  },
+  paymentNoticeSecondaryButton: {
+    flex: 1,
+    height: 40,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: RED,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paymentNoticeSecondaryText: {
+    color: RED,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  paymentReferralInput: {
+    width: '100%',
+    minHeight: 46,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: PALE_YELLOW,
+    color: DARK,
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 1,
+    paddingHorizontal: 14,
+    marginTop: 14,
+    textAlign: 'center',
   },
 });
 

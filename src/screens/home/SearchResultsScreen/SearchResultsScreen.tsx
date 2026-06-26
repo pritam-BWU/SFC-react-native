@@ -102,7 +102,7 @@ const SearchResultsScreen = ({ navigation, route }: Props) => {
           <Text style={styles.summaryText}>
             {searchData.hasExactResults
               ? `${searchData.products.length} products matched your search.`
-              : 'No exact match found, so here are all FoodClub products.'}
+              : 'No exact match found, so here are all Food Club products.'}
           </Text>
         </View>
 

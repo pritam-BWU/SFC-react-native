@@ -39,7 +39,7 @@ const CategoriesScreen = ({ navigation, route }: Props) => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.subtitle}>Browse Superfowl FoodClub products by category.</Text>
+          <Text style={styles.subtitle}>Browse Superfowl Food Club products by category.</Text>
         </View>
 
         {categories.map(category => (

@@ -115,7 +115,7 @@ const HomeScreen = () => {
         },
         {
           id: 'member',
-          eyebrow: 'Foodclub Member',
+          eyebrow: 'Food Club Member',
           title: 'Better Access Ahead',
           subtitle: 'Exclusive member-oriented benefits',
           description:
@@ -397,7 +397,7 @@ const HomeScreen = () => {
           </View>
           <View style={styles.foodclubCopy}>
             <Text style={styles.foodclubTitle}>
-              Join Superfowl Foodclub Membership
+              Join Superfowl Food Club Membership
             </Text>
             <Text style={styles.foodclubText}>
               Become our foodclub member and enjoy exclusive pricing and priority

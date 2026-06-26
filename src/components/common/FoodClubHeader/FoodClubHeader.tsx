@@ -63,7 +63,7 @@ const FoodClubHeader = ({
           <Text style={styles.logoText} numberOfLines={1}>
             <Text style={styles.logoRed}>Superfowl </Text>
             <Text style={styles.logoDark}>Food</Text>
-            <Text style={styles.logoRed}>Club</Text>
+            <Text style={styles.logoRed}> Club</Text>
           </Text>
           <Text style={styles.logoSub} numberOfLines={1}>
             Better Food. Better You.
